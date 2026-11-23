@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Feminine Movement",
+    "slug": "feminine-movement",
+    "scheme": "femininemovement",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0F0B0C",
+    "splash": { "backgroundColor": "#0F0B0C" },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.femininemovement.app"
+    },
+    "android": {
+      "package": "com.femininemovement.app",
+      "adaptiveIcon": { "backgroundColor": "#0F0B0C" }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-video",
+      ["expo-image-picker", { "photosPermission": "כדי להעלות סרטונים מהשיעורים למסע של התלמידות." }]
+    ]
+  }
+}
