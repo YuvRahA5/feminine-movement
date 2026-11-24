@@ -445,8 +445,9 @@ ROUTES.onboarding = () => {
   if (OB.step === 4) body = `
     <p class="gold" style="font-size:18px">ועוד רגע קטן אחרון…</p>
     <h1>התקנון שלנו</h1>
-    <p class="muted">קצר, ברור, ושומר על כולנו.</p>
-    <div class="card">${TERMS.map(([t, ls]) => `<div class="stack-s" style="gap:4px"><h3>${esc(t)}</h3>${ls.map(l => `<p class="small soft">· ${esc(l)}</p>`).join('')}</div>`).join('')}</div>
+    <p class="muted">ברור, הוגן, ושומר על כולנו. כדאי לקרוא 🤍</p>
+    <div class="card"><p class="xs muted">Feminine Movement · עודכן לאחרונה: ${LEGAL_DATE}</p>
+      ${LEGAL.terms[1].map(([h, ls]) => `<h3 class="gold">${esc(h)}</h3>${ls.map(l => `<p class="small soft">· ${esc(l)}</p>`).join('')}`).join('')}</div>
     <div class="card">
       <h3>צילומים בשיעורים 📷</h3>
       <p class="small soft">לפעמים אני מצלמת רגעים מהשיעורים כדי לשתף את האווירה ברשתות של הסטודיו ולהזמין עוד נשים לרקוד איתנו. מה מתאים לך?</p>
@@ -454,7 +455,7 @@ ROUTES.onboarding = () => {
       <button class="btn ${OB.photo === false ? 'gold' : 'outline'} block" data-photo="0" aria-pressed="${OB.photo === false}">אני מעדיפה לא להצטלם</button>
       <p class="xs muted">הבחירה לא משפיעה על ההשתתפות שלך, ואפשר לשנות אותה בכל רגע בפרופיל. אם תבקשי, אוריד פרסום שבו רואים אותך תוך 14 יום.</p>
     </div>
-    <div class="row" style="gap:8px"><button class="btn outline sm" data-legal="terms">לתקנון המלא</button><button class="btn outline sm" data-legal="privacy">למדיניות הפרטיות</button></div>
+    <button class="btn outline sm" data-legal="privacy" style="align-self:flex-start">למדיניות הפרטיות</button>
     <label class="check"><input type="checkbox" id="terms" ${OB.terms ? 'checked' : ''}><span>קראתי ואני מאשרת את התקנון, מדיניות הביטולים ומדיניות הפרטיות</span></label>
     <p id="err" class="danger small" hidden></p>`;
 
