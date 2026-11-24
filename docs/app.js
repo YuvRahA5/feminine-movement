@@ -57,7 +57,7 @@ const TERMS = [
   ['פרטיות', ['הפרטים, הצהרת הבריאות והסרטונים שלך נשמרים בשרת מאובטח. רק את ויובל רואות אותם.']],
 ];
 
-const BIZ = { name: 'יובל רחמים ירושלמי', id: '326471448', address: 'צלף 12', email: 'yuvalrahamim22@gmail.com', phone: '058-6718686' };
+const BIZ = { name: 'יובל רחמים ירושלמי', id: '326471448', address: 'צלף 12, עומר', email: 'yuvalrahamim22@gmail.com', phone: '058-6718686' };
 const LEGAL_DATE = '24.11.2026';
 const LEGAL = {
   terms: ['תקנון וביטולים', [
