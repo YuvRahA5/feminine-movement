@@ -781,8 +781,9 @@ ROUTES.profile = async () => {
   </div>`, 'profile');
 
   pushState().then(st => { const box = $('#pushbox'); if (!box) return;
-    box.innerHTML = st === 'on' ? '<div class="card"><div class="row between"><h3>🔔 התראות לטלפון</h3><span class="gold-l small">מופעלות במכשיר הזה ✓</span></div></div>' : pushCard(st);
-    bindPush(() => ROUTES.profile()); }).catch(() => {});
+    box.innerHTML = st === 'on' ? '<div class="card"><div class="row between"><h3>🔔 התראות לטלפון</h3><span class="gold-l small">מופעלות במכשיר הזה ✓</span></div><button class="btn ghost sm" id="testpush" style="align-self:flex-start">שליחת התראת בדיקה</button></div>' : pushCard(st);
+    bindPush(() => ROUTES.profile());
+    bind('#testpush', 'click', e => busy(e.currentTarget, async () => { await sb.rpc('test_push'); toast('נשלחה! ההתראה תגיע תוך דקה 🔔', 4000); })); }).catch(() => {});
   bind('[data-field]', 'click', e => {
     const f = e.currentTarget.dataset.field, v = !S.profile[f];
     S.profile[f] = v;

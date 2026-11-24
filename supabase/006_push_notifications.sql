@@ -118,3 +118,15 @@ language sql security definer set search_path = public as $$
 $$;
 revoke execute on function public.save_push_sub(text,text,text) from public, anon;
 grant execute on function public.save_push_sub(text,text,text) to authenticated;
+
+-- 008: the push function runs as service_role
+grant select on public.app_secrets to service_role;
+grant select, insert, update, delete on public.notifications, public.push_subscriptions to service_role;
+
+-- 009: a client can send a test notification to herself
+create or replace function public.test_push() returns void
+language sql security definer set search_path = public as $$
+  insert into notifications(user_id, title, body) values (auth.uid(), 'בדיקה 🔔', 'ההתראות עובדות. נתראה על הרצפה 💋');
+$$;
+revoke execute on function public.test_push() from public, anon;
+grant execute on function public.test_push() to authenticated;
