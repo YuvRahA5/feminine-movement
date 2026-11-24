@@ -130,3 +130,16 @@ language sql security definer set search_path = public as $$
 $$;
 revoke execute on function public.test_push() from public, anon;
 grant execute on function public.test_push() to authenticated;
+
+-- 010: tell Yuval when a new client finishes signing up
+create or replace function public.trg_new_client_notify() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.onboarded_at is not null and (tg_op = 'INSERT' or old.onboarded_at is null) and not new.is_admin then
+    perform notify_admins('נרשמה לקוחה חדשה 🖤', coalesce(new.display_name, '') || coalesce(' · ' || new.phone, ''));
+  end if;
+  return new;
+end $$;
+revoke execute on function public.trg_new_client_notify() from public, anon, authenticated;
+drop trigger if exists new_client_notify on public.profiles;
+create trigger new_client_notify after insert or update of onboarded_at on public.profiles for each row execute function public.trg_new_client_notify();
