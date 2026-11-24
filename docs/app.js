@@ -61,8 +61,6 @@ const BIZ = { name: 'יובל רחמים ירושלמי', id: '326471448', addre
 const LEGAL_DATE = '24.11.2026';
 const LEGAL = {
   terms: ['תקנון וביטולים', [
-    ['מי אנחנו', [`Feminine Movement הוא הסטודיו של ${BIZ.name}, עוסק מס׳ ${BIZ.id}, ${BIZ.address}. מייל: ${BIZ.email}. וואטסאפ: ${BIZ.phone}.`,
-      'השיעורים מתקיימים במרווה 11, שכונת סיגליות, באר שבע.']],
     ['המסלולים', ['מנוי חודשי פעם בשבוע: 4 שיעורים בחודש.', 'מנוי חודשי פעמיים בשבוע: 8 שיעורים בחודש.', 'שיעור בודד: שיעור אחד, בתוקף ל־30 יום.', 'המחירים המעודכנים מופיעים בעמוד "מנויים" באתר.']],
     ['המנוי החודשי', ['המנוי מתחדש אוטומטית בכל חודש בהוראת קבע, עד שמבטלים אותו.', 'בתחילת כל חודש מנוי נטענים השיעורים של אותו חודש. שיעורים שלא נוצלו עד סוף החודש פגים ולא עוברים לחודש הבא.',
       'המנוי אישי ואי אפשר להעביר אותו למישהי אחרת.', 'אם החיוב החודשי לא עובר, השיעורים של החודש החדש לא ייטענו עד שהתשלום יוסדר.']],
@@ -79,6 +77,8 @@ const LEGAL = {
       'מתחת לגיל 18 נדרש גם אישור של הורה.', 'חשוב לעדכן את יובל על כל שינוי במצב הבריאותי, פציעה או היריון. ההשתתפות בהתאם להצהרת הבריאות שמילאת.']],
     ['צילום', ['מותר לצלם את עצמך בשיעור. מה שאת מצלמת ומפרסמת באחריותך.', 'יובל מצלמת ומשתפת ברשתות רק מי שאישרה זאת בהרשמה. אפשר לשנות את הבחירה בכל רגע בפרופיל, ופרסום שבו רואים אותך יוסר תוך 14 יום מבקשה.']],
     ['שינויים', ['התקנון, מערכת השעות והמחירים יכולים להשתנות. על שינוי מהותי נודיע באתר מראש. מחיר של מנוי פעיל לא ישתנה בלי הודעה מראש, ותמיד אפשר לבטל.']],
+    ['פרטי העסק', [`Feminine Movement הוא הסטודיו של ${BIZ.name}, עוסק מס׳ ${BIZ.id}, ${BIZ.address}. מייל: ${BIZ.email}. וואטסאפ: ${BIZ.phone}.`,
+      'השיעורים מתקיימים במרווה 11, שכונת סיגליות, באר שבע.']],
   ]],
   privacy: ['מדיניות פרטיות', [
     ['מי אחראית על המידע', [`${BIZ.name} (Feminine Movement), עוסק מס׳ ${BIZ.id}. לכל פנייה בנושא פרטיות: ${BIZ.email} או וואטסאפ ${BIZ.phone}.`]],
@@ -341,7 +341,7 @@ async function route() {
   if (!onboarded(S.profile)) return ROUTES.onboarding();
   const fn = ROUTES[name] || ROUTES.home;
   if (name === 'admin' && !(S.profile && S.profile.is_admin)) return ROUTES.home();
-  try { await fn(); } catch (e) {
+  try { await fn(); coachTick(name); } catch (e) {
     render(`<div class="stack"><div class="card"><p>לא הצלחנו לטעון: ${esc(errText(e))}</p><button class="btn primary" id="retry">לנסות שוב</button></div></div>`, name);
     bind('#retry', 'click', route);
   }
@@ -504,7 +504,7 @@ async function finishOnboarding() {
     await sb.insert('health_declarations', { user_id: sb.uid, form_text: healthFull(OB.ans, OB.notes.trim(), OB.sig.trim()), answers, notes: OB.notes.trim() || null, signature: OB.sig.trim() });
     await loadProfile();
     OB.step = 1;
-    sessionStorage.setItem('fm_tour_i', '0'); location.hash = '#/tour'; route();
+    location.hash = '#/tour'; route();
     setTimeout(() => toast(`ברוכה הבאה, ${firstName(S.profile)} 🖤`), 300);
   } catch (e) { const el = $('#err'); if (el) { el.hidden = false; el.textContent = errText(e); } }
 }
@@ -561,43 +561,112 @@ ROUTES.health = async () => {
   }));
 };
 
-/* ───────────────────────── tour ───────────────────────── */
-const TOUR = [
-  ['💋', 'ברוכה הבאה ל־FM', 'סיור קצר באתר, פחות מדקה. אפשר לחזור אליו תמיד מהפרופיל.'],
-  ['🏠', 'עמוד הבית', 'כל יום מחכה לך כאן משפט או משימה קטנה של אהבה עצמית. רואים גם כמה שיעורים נשארו לך החודש, ואת השיעורים שנרשמת אליהם.'],
-  ['📅', 'מערכת השיעורים', 'לוחצים "להירשם" וזהו. שיעור מלא? אפשר להיכנס לרשימת המתנה ולבחור עד מתי לחכות. אם מתפנה מקום, את נרשמת אוטומטית ומקבלת התראה.\\nביטול עד 8 שעות לפני מחזיר את השיעור למנוי.'],
-  ['🐆', 'המסע שלי', 'כמה שיעורים רקדת, אבני דרך, וסרטונים שלך מהשיעורים. אפשר להעלות סרטונים בעצמך, וסרטון שסימנת בלב נכנס להשוואה "לפני ← עכשיו". הסרטונים פרטיים: רק את ויובל רואות.'],
-  ['👤', 'הפרופיל', 'המנוי שלך, עדכון הצהרת הבריאות, שאלות נפוצות, התקנון, וכפתור לוואטסאפ של יובל.'],
-  ['📲', 'שמרי את FM במסך הבית', ''],
+/* ───────────────────────── guided tour (inside the real pages) ───────────────────────── */
+const COACH = [
+  ['home', '.card.wine', 'המשפט של היום 💋', 'כל יום מחכה לך כאן משפט או משימה קטנה של אהבה עצמית. רוצה עוד אחד? לוחצים "עוד אחד בשבילי".'],
+  ['home', '#credits', 'השיעורים שנשארו לך', 'כאן רואים כמה שיעורים נשארו לך החודש ומתי המנוי מתחדש. הכפתור מוביל לעמוד המנויים.'],
+  ['home', '#mine', 'השיעורים שלי', 'כל השיעורים שנרשמת אליהם, ואם את ברשימת המתנה לשיעור כלשהו.'],
+  ['home', '#tabs a[href="#/schedule"]', 'הסרגל למטה', 'מכאן עוברים בין החלקים באתר. נתחיל ב"מערכת", השיעורים.'],
+  ['schedule', '[data-act]', 'הרשמה לשיעור', 'לוחצים "להירשם" וזהו, יורד שיעור מהמנוי. שיעור מלא? לוחצים "להמתנה" ובוחרים עד מתי לחכות. אם מתפנה מקום, את נרשמת אוטומטית ומקבלת התראה.', '.card'],
+  ['schedule', '.card + p.xs, .stack > p.xs.muted', 'ביטולים', 'ביטול עד 8 שעות לפני השיעור מחזיר את השיעור למנוי. פחות מזה, אפשר לבטל רק אם מישהי מחכה ברשימת ההמתנה.'],
+  ['journey', '.milestones', 'המסע שלי 🐆', 'כמה שיעורים רקדת, ואבני הדרך שלך. כל שיעור הוא עוד צעד.', '.card'],
+  ['journey', '#upload', 'הסרטונים שלך', 'אפשר להעלות לכאן סרטונים שצילמת בשיעור, וגם יובל מעלה. סרטון שסימנת בלב נכנס להשוואה "לפני ← עכשיו". הכול פרטי: רק את ויובל רואות.'],
+  ['profile', 'a[href="#/plans"]', 'המנוי שלי', 'כאן רואים את המנוי, מצטרפים או עוברים מסלול, ומבטלים בכל עת.'],
+  ['plans', '.pkg', 'המסלולים', 'פעם בשבוע, פעמיים בשבוע, או שיעור בודד. לוחצים על המסלול כדי להצטרף.'],
+  ['profile', 'a[href="#/health"]', 'הצהרת בריאות', 'משהו השתנה? פציעה, היריון, אבחנה חדשה? מעדכנים כאן את הצהרת הבריאות.', '.list-row'],
+  ['profile', 'details.faq', 'שאלות נפוצות', 'עקבים, מה ללבוש, מה להביא ועוד. ולמטה: התקנון, מדיניות הפרטיות וכפתור לוואטסאפ של יובל.', '.card'],
 ];
-ROUTES.tour = async () => {
-  const i = Math.min(Number(sessionStorage.getItem('fm_tour_i') || 0), TOUR.length - 1);
-  const [em, title, text] = TOUR[i], last = i === TOUR.length - 1;
-  let extra = '';
-  if (last) {
-    const ps = await pushState().catch(() => 'unsupported');
-    const ios = isIOS(), standalone = isStandalone();
-    extra = standalone ? '<p class="soft center">מעולה, את כבר באתר מתוך מסך הבית ✓</p>' : ios
-      ? `<div class="card"><h3>באייפון (ספארי):</h3><p class="small soft">1. לוחצים על כפתור השיתוף <b>⎋</b> (ריבוע עם חץ למעלה) בתחתית המסך<br>2. גוללים ובוחרים <b>"הוספה למסך הבית"</b><br>3. לוחצים <b>"הוסף"</b> למעלה<br>4. נכנסים מעכשיו דרך האייקון FM, ומפעילים התראות</p></div>`
-      : `<div class="card"><h3>באנדרואיד (כרום):</h3><p class="small soft">1. לוחצים על שלוש הנקודות ⋮ למעלה<br>2. בוחרים <b>"הוספה למסך הבית"</b> או <b>"התקנת אפליקציה"</b><br>3. מאשרים, ונכנסים מעכשיו דרך האייקון FM</p></div>`;
-    extra += `<p class="soft">ככה FM נפתח כמו אפליקציה, ותקבלי התראות כשמתפנה לך מקום ולפני כל שיעור.</p>` + pushCard(ps, true);
-  }
-  render(`<div class="stack" style="min-height:80vh;justify-content:center">
-    <div class="tour-emoji">${em}</div>
-    <h1 class="center">${esc(title)}</h1>
-    ${text ? `<p class="soft center" style="font-size:17px">${nl(text)}</p>` : ''}
-    ${extra}
-    <div class="dots">${TOUR.map((_, k) => `<span class="${k === i ? 'on' : ''}"></span>`).join('')}</div>
-    <button class="btn primary block" id="tnext">${last ? 'סיום, יאללה לרקוד 💋' : 'הבא'}</button>
-    <div class="row between">${i > 0 ? '<button class="btn ghost" id="tback">הקודם</button>' : '<span></span>'}${last ? '' : '<button class="btn ghost" id="tskip">דילוג</button>'}</div>
-  </div>`, null);
+function coachStart() { sessionStorage.setItem('fm_coach', '0'); $('#coach') && $('#coach').remove(); if (location.hash === '#/home') route(); else location.hash = '#/home'; }
+function coachEnd(toInstall) {
+  sessionStorage.removeItem('fm_coach'); const o = $('#coach'); if (o) o.remove();
+  try { localStorage.setItem('fm_tour_done', '1'); } catch (_) {}
+  location.hash = toInstall ? '#/install' : '#/home';
+}
+function coachTick(name) {
+  const o = $('#coach'); if (o) o.remove();
+  const raw = sessionStorage.getItem('fm_coach'); if (raw === null) return;
+  let i = Number(raw);
+  if (i >= COACH.length) return coachEnd(true);
+  const [r, sel, title, text, up] = COACH[i];
+  if (r !== name) { location.hash = '#/' + r; return; }
+  let el = $(sel);
+  if (el && up && el.closest(up)) el = el.closest(up);
+  if (!el) { sessionStorage.setItem('fm_coach', String(i + 1)); return coachTick(name); }
+  const fixed = getComputedStyle(el.closest('.tabs') || el).position === 'fixed' || !!el.closest('.tabs');
+  if (!fixed) el.scrollIntoView({ block: 'center' });
+  setTimeout(() => {
+    const rc = el.getBoundingClientRect(), pad = 8, vh = window.innerHeight;
+    const box = document.createElement('div'); box.id = 'coach';
+    const below = rc.top + rc.height / 2 < vh / 2;
+    box.innerHTML = `<div class="coach-hole" style="top:${rc.top - pad}px;left:${rc.left - pad}px;width:${rc.width + pad * 2}px;height:${rc.height + pad * 2}px"></div>
+      <div class="coach-tip" style="${below ? `top:${Math.min(rc.bottom + pad + 12, vh - 230)}px` : `bottom:${Math.min(vh - rc.top + pad + 12, vh - 230)}px`}">
+        <p class="xs gold">${i + 1} מתוך ${COACH.length}</p><h3>${esc(title)}</h3><p class="small soft">${esc(text)}</p>
+        <div class="row between"><button class="btn ghost sm" data-cskip>דילוג על הסיור</button>
+          <div class="row" style="gap:6px">${i > 0 ? '<button class="btn outline sm" data-cback>הקודם</button>' : ''}<button class="btn primary sm" data-cnext>${i === COACH.length - 1 ? 'סיום' : 'הבא'}</button></div></div></div>`;
+    document.body.appendChild(box);
+    const go = k => { sessionStorage.setItem('fm_coach', String(k)); if (k >= COACH.length) return coachEnd(true); const nr = COACH[k][0]; if (nr === name) coachTick(name); else location.hash = '#/' + nr; };
+    $('[data-cnext]', box).addEventListener('click', () => go(i + 1));
+    const bk = $('[data-cback]', box); if (bk) bk.addEventListener('click', () => go(i - 1));
+    $('[data-cskip]', box).addEventListener('click', () => coachEnd(true));
+  }, fixed ? 50 : 380);
+}
+window.addEventListener('resize', () => { if ($('#coach')) coachTick((location.hash.replace(/^#\/?/, '') || 'home').split('?')[0]); });
+
+ROUTES.tour = () => {
   showTabs(null);
-  const go = k => { sessionStorage.setItem('fm_tour_i', String(k)); ROUTES.tour(); window.scrollTo(0, 0); };
-  const done = () => { try { localStorage.setItem('fm_tour_done', '1'); } catch (_) {} sessionStorage.removeItem('fm_tour_i'); location.hash = '#/home'; };
-  bind('#tnext', 'click', () => last ? done() : go(i + 1));
-  bind('#tback', 'click', () => go(i - 1));
-  bind('#tskip', 'click', done);
-  bindPush(() => ROUTES.tour());
+  render(`<div class="stack" style="min-height:80vh;justify-content:center;text-align:center">
+    <div class="tour-emoji">💋</div>
+    <h1 class="center">ברוכה הבאה ל־FM</h1>
+    <p class="soft center" style="font-size:17px">בואי נעשה סיבוב קצר בתוך האתר, אני אראה לך כל חלק. בסוף נשמור את FM במסך הבית שלך כדי שתקבלי התראות.</p>
+    <button class="btn primary block" id="tgo">יאללה, בואי נתחיל</button>
+    <button class="btn ghost" id="tskip">לא עכשיו</button>
+  </div>`, null);
+  bind('#tgo', 'click', coachStart);
+  bind('#tskip', 'click', () => { try { localStorage.setItem('fm_tour_done', '1'); } catch (_) {} location.hash = '#/install'; });
+};
+
+/* ───────────────────────── add to home screen (iPhone / Galaxy) ───────────────────────── */
+const SHARE_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align:-4px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11v9h12v-9"/></svg>';
+const ADD_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align:-4px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+const step = (n, html) => `<div class="row" style="align-items:flex-start;gap:12px"><span style="flex:0 0 32px;height:32px;border-radius:16px;background:var(--burgundy);color:#F0D6B0;display:flex;align-items:center;justify-content:center;font-weight:700">${n}</span><p class="soft" style="font-size:16px;padding-top:4px">${html}</p></div>`;
+ROUTES.install = async () => {
+  let dev = null; try { dev = localStorage.getItem('fm_device'); } catch (_) {}
+  const ps = await pushState().catch(() => 'unsupported');
+  const done = isStandalone();
+  let body = '';
+  if (done) body = `<div class="card"><p class="soft">מעולה, את כבר בתוך FM ממסך הבית ✓</p></div>${ps === 'on' ? '<div class="card"><p class="gold-l">🔔 ההתראות מופעלות. את מוכנה!</p></div>' : pushCard(ps)}`;
+  else if (!dev) body = `<h2 class="center">איזה טלפון יש לך?</h2>
+    <button class="btn outline block" data-dev="iphone" style="min-height:64px;font-size:18px">📱 אייפון</button>
+    <button class="btn outline block" data-dev="galaxy" style="min-height:64px;font-size:18px">📱 גלקסי (סמסונג) או אנדרואיד אחר</button>`;
+  else if (dev === 'iphone') body = `<div class="card stack-s"><h3>באייפון, בספארי:</h3>
+      ${step(1, `לוחצים על כפתור השיתוף ${SHARE_SVG} (ריבוע עם חץ למעלה) בתחתית המסך.<br><span class="xs muted">לא רואה אותו? לוחצים קודם על ••• בפינה, ואז "שיתוף".</span>`)}
+      ${step(2, `גוללים למטה ובוחרים <b>"הוספה למסך הבית"</b> ${ADD_SVG}`)}
+      ${step(3, 'בודקים שהשם הוא <b>FM</b>, ולוחצים <b>"הוסף"</b> למעלה.')}
+      ${step(4, 'סוגרים את ספארי ופותחים את <b>FM</b> מהאייקון החדש במסך הבית.')}
+      ${step(5, 'בתוך FM, בעמוד הבית או בפרופיל, לוחצים <b>"להפעיל התראות"</b> ומאשרים <b>"אפשר"</b>.')}</div>
+      <p class="xs muted">בכרום באייפון זה לא עובד. צריך לפתוח את הקישור דווקא בספארי.</p>
+      <button class="btn ghost" data-dev="">יש לי טלפון אחר</button>`;
+  else body = `<div class="card stack-s"><h3>בגלקסי, בדפדפן של סמסונג (Samsung Internet):</h3>
+      ${step(1, 'לוחצים על התפריט <b>☰</b> (שלושה פסים) בפינה למטה.')}
+      ${step(2, 'בוחרים <b>"הוספת דף אל"</b>, ואז <b>"מסך הבית"</b>.')}
+      ${step(3, 'לוחצים <b>"הוסף"</b>. האייקון FM יופיע במסך הבית.')}</div>
+    <div class="card stack-s"><h3>או בכרום:</h3>
+      ${step(1, 'לוחצים על שלוש הנקודות <b>⋮</b> בפינה למעלה.')}
+      ${step(2, 'בוחרים <b>"הוספה למסך הבית"</b> או <b>"התקנת אפליקציה"</b>.')}
+      ${step(3, 'לוחצים <b>"התקנה"</b> או <b>"הוסף"</b>.')}</div>
+    <div class="card"><p class="soft">ואחרי זה: פותחים את <b>FM</b> מהאייקון, לוחצים <b>"להפעיל התראות"</b> ומאשרים <b>"אפשר"</b>.</p></div>
+    ${ps === 'off' || ps === 'blocked' ? pushCard(ps, true) : ''}
+    <button class="btn ghost" data-dev="">יש לי טלפון אחר</button>`;
+  render(`<div class="stack">
+    <a class="btn ghost" href="#/home" style="align-self:flex-start">› דילוג</a>
+    <div class="tour-emoji">📲</div>
+    <h1 class="center">שמרי את FM במסך הבית</h1>
+    <p class="soft center">ככה FM נפתח כמו אפליקציה, ותקבלי התראה כשמתפנה לך מקום ולפני כל שיעור.</p>
+    ${body}
+    <a class="btn primary block" href="#/home">סיום, יאללה לרקוד 💋</a>
+  </div>`, null);
+  bind('[data-dev]', 'click', e => { try { const v = e.currentTarget.dataset.dev; v ? localStorage.setItem('fm_device', v) : localStorage.removeItem('fm_device'); } catch (_) {} ROUTES.install(); });
+  bindPush(() => ROUTES.install());
 };
 
 /* ───────────────────────── phone notifications ───────────────────────── */
@@ -631,9 +700,9 @@ async function enablePush() {
 // A card that explains and turns notifications on. Returns '' when already on.
 function pushCard(state, compact) {
   if (state === 'on' || state === 'unsupported') return '';
-  if (state === 'install') return `<div class="card" style="border-color:var(--gold)"><h3>🔔 כדי לקבל התראות באייפון</h3>
-    <p class="small soft">באייפון התראות עובדות רק מהאתר שנשמר במסך הבית:</p>
-    <p class="small soft">1. לוחצים על כפתור השיתוף <b>⎋</b> בתחתית ספארי<br>2. בוחרים <b>"הוספה למסך הבית"</b><br>3. פותחים את האתר מהאייקון החדש, ומפעילים כאן התראות</p></div>`;
+  if (state === 'install') return `<div class="card" style="border-color:var(--gold)"><h3>🔔 כדי לקבל התראות</h3>
+    <p class="small soft">צריך לשמור את FM במסך הבית. לוקח חצי דקה, ויש הסבר צעד־צעד.</p>
+    <a class="btn gold block" href="#/install">להסבר איך שומרים</a></div>`;
   if (state === 'blocked') return `<div class="card"><h3>🔔 ההתראות חסומות</h3><p class="small soft">כדי לדעת כשמתפנה לך מקום, צריך לאשר התראות לאתר בהגדרות הטלפון או הדפדפן.</p></div>`;
   return `<div class="card" style="border-color:var(--gold)"><h3>🔔 התראות לטלפון</h3>
     ${compact ? '' : '<p class="small soft">כדי שתדעי מיד כשמתפנה לך מקום מרשימת ההמתנה, כשמשתנה שיעור, ותזכורת לפני כל שיעור.</p>'}
@@ -673,7 +742,7 @@ ROUTES.home = async () => {
       <div><button class="btn outline sm" id="more" style="border-color:#E8C9A0;color:var(--warm)">עוד אחד בשבילי</button></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="credits">
       <div class="row between">
         <div><p class="small muted">נשארו לך החודש</p><p style="font-size:26px;font-weight:700">${credLabel(cr.total)}</p></div>
         <a class="btn gold" href="#/plans">${sub && sub.status === 'active' ? 'המנוי שלי' : 'למנויים 👠'}</a>
@@ -681,7 +750,7 @@ ROUTES.home = async () => {
       <p class="xs ${sub ? 'gold-l' : 'muted'}">${subLine}</p>
     </div>
 
-    <div class="stack-s">
+    <div class="stack-s" id="mine">
       <div class="row between"><h2>השיעורים שלי</h2><a href="#/schedule" class="btn ghost sm" style="color:var(--gold)">למערכת</a></div>
       ${mine.length ? mine.map(x => { const d = new Date(x.s.starts_at); return `<div class="card"><div class="row between">
           <div><h3>${dayName(d)} ${dm(d)} · ${hm(d)}</h3><p class="small muted">${esc(x.s.title)}</p></div>
@@ -810,7 +879,7 @@ ROUTES.journey = async () => {
         <button class="heart" data-like="${v.id}" aria-label="${v.liked ? 'הסרת לייק' : 'לייק'}" aria-pressed="${v.liked}">${v.liked ? '❤️' : '🤍'}</button></div>`).join('')}</div>`
         : '<p class="small muted">עוד אין כאן סרטונים.</p>'}
     </div>
-    <div class="card"><h3>להעלות סרטון שלי 🎥</h3>
+    <div class="card" id="upload"><h3>להעלות סרטון שלי 🎥</h3>
       <p class="small soft">צילמת את עצמך בשיעור? העלי לכאן ותראי את ההתקדמות שלך לאורך הזמן. הסרטונים פרטיים: רק את ויובל רואות אותם. גם יובל יכולה להעלות לכאן סרטונים שלך.</p>
       <label class="btn primary block">בחירת סרטון<input type="file" accept="video/*" id="myvid" hidden></label>
       <p class="xs muted">עד 50MB לסרטון (בערך דקה בטלפון).</p></div>
@@ -853,7 +922,7 @@ ROUTES.profile = async () => {
       <button class="btn ghost sm" id="edit">עריכה</button></div></div>
     <a class="btn outline block" href="#/plans">המנוי שלי</a>
     <div id="pushbox"></div>
-    <button class="btn ghost block" id="tour">סיור באתר והוספה למסך הבית 📲</button>
+    <div class="row" style="gap:8px"><button class="btn outline sm" style="flex:1" id="tour">סיור באתר 🗺️</button><button class="btn outline sm" style="flex:1" id="install">הוספה למסך הבית 📲</button></div>
     <div class="stack-s"><h2>צילום בשיעורים</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
       ${tg('photo_social_ok', 'שיתוף ברשתות של הסטודיו', 'רק באישור שלך לכל פרסום')}</div></div>
     <div class="stack-s"><h2>שאלות נפוצות</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
@@ -877,7 +946,8 @@ ROUTES.profile = async () => {
     sb.update('profiles', `id=eq.${sb.uid}`, { [f]: v }).then(loadProfile).catch(err => { toast(errText(err)); ROUTES.profile(); });
   });
   bind('[data-legal]', 'click', e => legalSheet(e.currentTarget.dataset.legal));
-  bind('#tour', 'click', () => { sessionStorage.setItem('fm_tour_i', '0'); location.hash = '#/tour'; });
+  bind('#tour', 'click', coachStart);
+  bind('#install', 'click', () => { location.hash = '#/install'; });
   bind('#edit', 'click', () => sheet(`<h2>עריכת פרטים</h2>
       <label class="field"><span>שם מלא או שם חיבה</span><input type="text" id="n" value="${esc(p.display_name)}"></label>
       <label class="field"><span>טלפון</span><input class="ltr" type="tel" id="ph" value="${esc(p.phone || '')}"></label>
@@ -912,7 +982,7 @@ ROUTES.plans = async () => {
       <p class="small" style="color:#E8C9A0">${active ? `החידוש הבא: ${dmy(new Date(sub.period_end))}` : `השיעורים זמינים עד ${dmy(new Date(sub.period_end))}. אין חיובים נוספים.`}</p>
       ${active ? '<button class="btn ghost" id="cancel" style="color:#F0D6B0;align-self:flex-start">ביטול המנוי</button>' : ''}
     </div>` : `<p class="muted">יש לך עכשיו ${credLabel(cr.total)}.</p>`}
-    ${packs.map(p => `<div class="card"><div class="row between">
+    ${packs.map(p => `<div class="card pkg"><div class="row between">
       <div class="grow"><h3 style="font-size:18px">${esc(p.title)}</h3>
         <p class="small muted">${p.kind === 'monthly' ? `${p.classes} שיעורים בחודש · ₪${Math.round(p.price_ils / p.classes)} לשיעור` : 'בתוקף ל־30 יום'}</p>
         ${p.kind === 'monthly' && p.classes * single > p.price_ils ? `<p class="xs gold-l" style="font-weight:600">${Math.round(100 - 100 * p.price_ils / (p.classes * single))}% הנחה לעומת שיעור בודד</p>` : ''}</div>
