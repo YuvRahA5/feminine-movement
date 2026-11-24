@@ -963,10 +963,13 @@ ROUTES.profile = async () => {
 /* ───────────────────────── plans / my subscription ───────────────────────── */
 ROUTES.plans = async () => {
   loading(); showTabs('home');
-  const [packs, sub, cr] = await Promise.all([sb.select('packages', 'select=*&active=eq.true&order=sort'), mySubscription(), credits()]);
+  const [packs, sub, cr, preq] = await Promise.all([sb.select('packages', 'select=*&active=eq.true&order=sort'), mySubscription(), credits(),
+    sb.select('payment_requests', `select=*,packages(title)&user_id=eq.${sb.uid}&status=eq.pending`).catch(() => [])]);
+  const pending = preq[0];
   const active = sub && sub.status === 'active';
   const single = (packs.find(x => x.kind === 'single') || { price_ils: 65 }).price_ils;
-  const ask = p => p.pay_url || whatsappLink(`היי יובל, אני רוצה להצטרף ל${p.title} (₪${p.price_ils}${p.kind === 'monthly' ? ' לחודש' : ''}) 👠`);
+  const ask = p => p.pay_url || null;
+  const askWa = p => whatsappLink(`היי יובל, אני רוצה להצטרף ל${p.title} (₪${p.price_ils}${p.kind === 'monthly' ? ' לחודש' : ''}) 👠`);
   render(`<div class="stack">
     <a class="btn ghost" href="#/home" style="align-self:flex-start">› חזרה</a>
     <h1>${active ? 'המנוי שלי' : 'מנויים'}</h1>
@@ -977,16 +980,37 @@ ROUTES.plans = async () => {
       <p class="small" style="color:#E8C9A0">${active ? `החידוש הבא: ${dmy(new Date(sub.period_end))}` : `השיעורים זמינים עד ${dmy(new Date(sub.period_end))}. אין חיובים נוספים.`}</p>
       ${active ? '<button class="btn ghost" id="cancel" style="color:#F0D6B0;align-self:flex-start">ביטול המנוי</button>' : ''}
     </div>` : `<p class="muted">יש לך עכשיו ${credLabel(cr.total)}.</p>`}
+    ${pending ? `<div class="card" style="border-color:var(--gold)"><h3>⏳ התשלום מחכה לאישור</h3><p class="small soft">שלחת אישור על תשלום ב${pending.method === 'bit' ? 'ביט' : 'פייבוקס'} עבור ${esc(pending.packages.title)}. ברגע שיובל תאשר, השיעורים ייטענו ותקבלי התראה.</p></div>` : ''}
     ${packs.map(p => `<div class="card pkg"><div class="row between">
       <div class="grow"><h3 style="font-size:18px">${esc(p.title)}</h3>
         <p class="small muted">${p.kind === 'monthly' ? `${p.classes} שיעורים בחודש · ₪${Math.round(p.price_ils / p.classes)} לשיעור` : 'בתוקף ל־30 יום'}</p>
         ${p.kind === 'monthly' && p.classes * single > p.price_ils ? `<p class="xs gold-l" style="font-weight:600">${Math.round(100 - 100 * p.price_ils / (p.classes * single))}% הנחה לעומת שיעור בודד</p>` : ''}</div>
       <div class="center"><p style="font-size:22px;font-weight:700">₪${p.price_ils}</p><p class="xs muted">${p.kind === 'monthly' ? 'לחודש' : 'חד־פעמי'}</p></div></div>
       ${ask(p) ? `<a class="btn gold block" target="_blank" rel="noopener" href="${ask(p)}">${active && sub.package_id === p.id ? 'המנוי הנוכחי שלך' : p.kind === 'monthly' ? (active ? 'מעבר למנוי הזה' : 'להצטרפות') : 'לרכישה'}</a>`
-        : '<p class="xs muted">קישור התשלום יעלה כאן בקרוב.</p>'}
+        : `<button class="btn gold block" data-pay="${p.id}" ${pending ? 'disabled' : ''}>${p.kind === 'monthly' ? 'להצטרפות' : 'לרכישה'} · ביט / פייבוקס</button>`}
     </div>`).join('')}
-    <p class="xs muted">המנוי מתחדש אוטומטית בכל חודש בהוראת קבע. שיעורים שלא נוצלו פגים בסוף החודש. אפשר לבטל בכל עת, והביטול נכנס לתוקף תוך 3 ימי עסקים, לפי חוק הגנת הצרכן.</p>
+    <p class="xs muted">כרגע התשלום בביט או בפייבוקס, לחודש אחד בכל פעם, בלי התחייבות. המנוי בתוקף ל־30 יום מהאישור, ושיעורים שלא נוצלו עד אז פגים.</p>
   </div>`, 'home');
+  bind('[data-pay]', 'click', e => {
+    const p = packs.find(x => x.id === Number(e.currentTarget.dataset.pay));
+    const phone = BIZ.phone;
+    sheet(`<div class="sheet-x"><span class="small muted">תשלום</span><button data-close aria-label="סגירה">✕</button></div>
+      <h2>${esc(p.title)} · ₪${p.price_ils}</h2>
+      ${step(1, `מעבירים <b>₪${p.price_ils}</b> בביט או בפייבוקס למספר:`)}
+      <div class="row between card flat"><b class="ltr" style="font-size:22px;letter-spacing:1px">${phone}</b><button class="btn outline sm" id="copy">העתקה</button></div>
+      ${step(2, 'בהערה להעברה כותבים את השם שלך.')}
+      ${step(3, 'חוזרים לכאן ולוחצים על הכפתור המתאים:')}
+      <button class="btn gold block" data-m="bit">שילמתי בביט ✓</button>
+      <button class="btn outline block" data-m="paybox">שילמתי בפייבוקס ✓</button>
+      <p class="xs muted">יובל תבדוק ותאשר, ואז השיעורים ייטענו ותקבלי התראה.${p.kind === 'monthly' ? ' בתשלום בביט או בפייבוקס המנוי הוא לחודש אחד, ובכל חודש משלמים מחדש באותה דרך.' : ''}</p>
+      ${askWa(p) ? `<a class="btn ghost block" target="_blank" rel="noopener" href="${askWa(p)}">שאלה? כתבי ליובל</a>` : ''}`, (el, close) => {
+      $('#copy', el).addEventListener('click', () => { (navigator.clipboard ? navigator.clipboard.writeText(phone.replace(/\D/g, '')) : Promise.reject()).then(() => toast('המספר הועתק')).catch(() => toast(phone)); });
+      $$('[data-m]', el).forEach(b => b.addEventListener('click', ev => busy(ev.currentTarget, async () => {
+        try { await sb.rpc('request_payment', { pkg: p.id, m: b.dataset.m }); close(); toast('נשלח ליובל לאישור 💋', 4000); ROUTES.plans(); }
+        catch (err) { toast(errText(err), 5000); }
+      })));
+    });
+  });
   bind('#cancel', 'click', () => confirmSheet('לבטל את המנוי?', `לא יהיו חיובים נוספים. השיעורים שכבר שילמת עליהם זמינים עד ${dmy(new Date(sub.period_end))}.`, 'כן, לבטל את המנוי', async () => {
     try { await sb.rpc('cancel_my_subscription'); toast('המנוי בוטל. נתראה על הרצפה 🖤', 4000); } catch (e) { toast(errText(e)); }
     ROUTES.plans();
@@ -1039,13 +1063,14 @@ ROUTES.admin = async () => {
   loading(); showTabs(null);
   await seedMessages();
   const sess = await sb.select('class_sessions', `select=*&starts_at=gte.${new Date(Date.now() - 6 * 36e5).toISOString()}&cancelled=eq.false&order=starts_at&limit=12`);
-  const [book, clients, packs, subs, packsLeft, decl] = await Promise.all([
+  const [book, clients, packs, subs, packsLeft, decl, payReqs] = await Promise.all([
     sess.length ? sb.select('bookings', `select=id,session_id,status,joined_at,profiles(display_name)&session_id=in.(${sess.map(x => x.id).join(',')})&status=in.(booked,waitlist)&order=joined_at`) : [],
     sb.select('profiles', 'select=id,display_name,phone,age,intro,photo_journey_ok,photo_social_ok,onboarded_at,is_admin&order=onboarded_at.desc.nullslast'),
     sb.select('packages', 'select=*&active=eq.true&order=sort'),
     sb.select('subscriptions', `select=*,packages(title)&status=eq.active`),
     sb.select('credit_packs', `select=user_id,remaining&expires_at=gt.${nowIso()}`),
     sb.select('health_declarations', 'select=user_id,needs_doctor,doctor_approved_at,signed_at,notes,answers&order=signed_at'),
+    sb.select('payment_requests', 'select=*,packages(title,price_ils),profiles(display_name)&status=eq.pending&order=created_at').catch(() => []),
   ]);
   const lastDecl = {}; decl.forEach(d => { lastDecl[d.user_id] = d; });
   const waitDoc = clients.filter(x => lastDecl[x.id] && lastDecl[x.id].needs_doctor && !lastDecl[x.id].doctor_approved_at);
@@ -1056,6 +1081,9 @@ ROUTES.admin = async () => {
 
   render(`<div class="stack">
     <div class="row between"><h1>ניהול 🐆</h1><a class="btn ghost" href="#/home">› חזרה</a></div>
+    ${payReqs.length ? `<div class="card" style="border-color:var(--gold)"><h3>תשלומים לאישור 💸</h3><p class="xs muted">בדקי שההעברה הגיעה בביט או בפייבוקס, ולחצי "אישור". השיעורים ייטענו לה מיד.</p>
+      ${payReqs.map(r => `<div class="list-row"><div class="grow"><p>${esc(r.profiles && r.profiles.display_name)}</p><p class="xs muted">${esc(r.packages.title)} · ₪${r.packages.price_ils} · ${r.method === 'bit' ? 'ביט' : 'פייבוקס'} · ${dm(new Date(r.created_at))} ${hm(new Date(r.created_at))}</p></div>
+        <div class="row" style="gap:6px"><button class="btn gold sm" data-payok="${r.id}">אישור</button><button class="btn ghost sm" data-payno="${r.id}">לא הגיע</button></div></div>`).join('')}</div>` : ''}
     ${waitDoc.length ? `<div class="card" style="border-color:var(--gold)"><h3>מחכות לאישור 🩺</h3><p class="xs muted">סימנו "כן" בהצהרת הבריאות (צריך אישור רופא), או שהן מתחת לגיל 18 (צריך אישור הורה). אחרי שקיבלת את האישור, לחצי "אישור" והן יוכלו להירשם.</p>
       ${waitDoc.map(x => `<div class="list-row"><span>${esc(x.display_name)}</span><button class="btn gold sm" data-doc="${x.id}">אישור</button></div>`).join('')}</div>` : ''}
     <button class="btn outline block" id="tue">הוספת שיעורי ראשון ל־8 שבועות</button>
@@ -1111,6 +1139,8 @@ ROUTES.admin = async () => {
   bind('[data-client]', 'click', e => { adminClient = e.currentTarget.dataset.client; again(); });
   bind('[data-cap]', 'click', e => busy(e.currentTarget, async () => { await sb.rpc('admin_set_capacity', { s: e.currentTarget.dataset.cap, cap: Number(e.currentTarget.dataset.v) }); again(); }));
   bind('[data-cancel]', 'click', e => { const id = e.currentTarget.dataset.cancel; confirmSheet('לבטל את השיעור?', 'כל הרשומות יקבלו את השיעור בחזרה.', 'כן, לבטל', async () => { await sb.rpc('admin_cancel_session', { s: id }); again(); }, true); });
+  bind('[data-payok]', 'click', e => busy(e.currentTarget, async () => { try { await sb.rpc('admin_decide_payment', { r: e.currentTarget.dataset.payok, ok: true }); toast('אושר ✓ השיעורים נטענו'); } catch (err) { toast(errText(err)); } again(); }));
+  bind('[data-payno]', 'click', e => { const id = e.currentTarget.dataset.payno; confirmSheet('התשלום לא הגיע?', 'היא תקבל הודעה לפנות אלייך בוואטסאפ.', 'כן, לא הגיע', async () => { await sb.rpc('admin_decide_payment', { r: id, ok: false }); again(); }, true); });
   bind('[data-doc]', 'click', e => busy(e.currentTarget, async () => { await sb.rpc('admin_approve_doctor', { u: e.currentTarget.dataset.doc }); toast('אושר ✓ היא יכולה להירשם לשיעורים'); again(); }));
   bind('#tue', 'click', e => busy(e.currentTarget, async () => { const n = await addTuesdays(sess); toast(n ? `נוספו ${n} שיעורים` : 'כל השיעורים כבר קיימים'); again(); }));
   bind('[data-sub]', 'click', e => { const p = packs.find(x => x.id === Number(e.currentTarget.dataset.sub));
