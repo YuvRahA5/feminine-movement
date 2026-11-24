@@ -6,10 +6,11 @@
 const CFG = {
   url: 'https://vlnssgrfwjrpladaltmr.supabase.co',
   key: 'sb_publishable_YKmyBocLlZ7PorbISkHwQQ_LMneQ5tN', // public client key, safe in a web page
-  whatsapp: '',                       // Yuval's number in international form, e.g. 9725XXXXXXXX
+  whatsapp: '972586718686',
   address: 'מרווה 11, שכונת סיגליות, באר שבע',
   maps: 'https://maps.app.goo.gl/jwu2ckW7oeCmkMwp6',
   termsVersion: '2026-11-v3',
+  vapid: 'BFBISCh2WSBq4-8oh1GKzanpkgTDrFNPXhi83QdjFj3eLbGWFJsLSJ6mkTlPirD1UNDYogLU8P0JxASVPYA902E', // public key, safe in a web page
 };
 
 /* ───────────────────────── texts ───────────────────────── */
@@ -55,6 +56,57 @@ const TERMS = [
   ['בריאות ואחריות', ['ההשתתפות באחריותך ובהתאם להצהרת הבריאות שמילאת.', 'חשוב לעדכן את יובל על כל שינוי במצב הבריאותי, פציעה או היריון.']],
   ['פרטיות', ['הפרטים, הצהרת הבריאות והסרטונים שלך נשמרים בשרת מאובטח. רק את ויובל רואות אותם.']],
 ];
+
+const BIZ = { name: 'יובל רחמים ירושלמי', id: '326471448', address: 'צלף 12', email: 'yuvalrahamim22@gmail.com', phone: '058-6718686' };
+const LEGAL_DATE = '24.11.2026';
+const LEGAL = {
+  terms: ['תקנון וביטולים', [
+    ['מי אנחנו', [`Feminine Movement הוא הסטודיו של ${BIZ.name}, עוסק מס׳ ${BIZ.id}, ${BIZ.address}. מייל: ${BIZ.email}. וואטסאפ: ${BIZ.phone}.`,
+      'השיעורים מתקיימים במרווה 11, שכונת סיגליות, באר שבע.']],
+    ['המסלולים', ['מנוי חודשי פעם בשבוע: 4 שיעורים בחודש.', 'מנוי חודשי פעמיים בשבוע: 8 שיעורים בחודש.', 'שיעור בודד: שיעור אחד, בתוקף ל־30 יום.', 'המחירים המעודכנים מופיעים בעמוד "מנויים" באתר.']],
+    ['המנוי החודשי', ['המנוי מתחדש אוטומטית בכל חודש בהוראת קבע, עד שמבטלים אותו.', 'בתחילת כל חודש מנוי נטענים השיעורים של אותו חודש. שיעורים שלא נוצלו עד סוף החודש פגים ולא עוברים לחודש הבא.',
+      'המנוי אישי ואי אפשר להעביר אותו למישהי אחרת.', 'אם החיוב החודשי לא עובר, השיעורים של החודש החדש לא ייטענו עד שהתשלום יוסדר.']],
+    ['הרשמה וביטול שיעור', ['נרשמים לשיעורים דרך האתר.', 'ביטול עד 8 שעות לפני השיעור: השיעור חוזר למנוי.',
+      'פחות מ־8 שעות לפני השיעור: אפשר לבטל רק אם יש מישהי ברשימת ההמתנה שתיכנס במקומך. אחרת השיעור נספר.', 'אי־הגעה בלי ביטול: השיעור נספר.',
+      'רשימת המתנה: אם מתפנה מקום עד המועד שבחרת, את נרשמת אוטומטית, יורד שיעור מהמנוי ונשלחת אלייך התראה לטלפון. באחריותך להפעיל התראות באתר.',
+      'אם יובל מבטלת שיעור, השיעור חוזר לכל הנרשמות.']],
+    ['ביטול המנוי', ['אפשר לבטל את המנוי בכל עת, בעמוד "המנוי שלי" באתר או בהודעה ליובל.', 'הביטול נכנס לתוקף תוך 3 ימי עסקים, ואין חיובים אחרי מועד הביטול.', 'השיעורים של החודש ששולם נשארים זמינים עד סוף אותו חודש.']],
+    ['ביטול עסקה והחזר כספי', ['לפי חוק הגנת הצרכן, אפשר לבטל רכישה תוך 14 יום מיום הרכישה, ובלבד שעוד לא השתתפת בשיעור מהרכישה הזו. ההחזר יינתן בניכוי דמי ביטול של 5% מהמחיר או ₪100, הנמוך מביניהם.',
+      'לאזרחים ותיקים (מעל 65), לאנשים עם מוגבלות ולעולים חדשים, החוק מאפשר במקרים מסוימים לבטל עד 4 חודשים מיום הרכישה.',
+      'בקשת ביטול שולחים בוואטסאפ או במייל, עם שם מלא ותאריך הרכישה. ההחזר יינתן לאותו אמצעי תשלום, תוך 14 יום מקבלת הבקשה.']],
+    ['בריאות ואחריות', ['לפני ההשתתפות ממלאים הצהרת בריאות לפי תקנות מכוני כושר. ההצהרה בתוקף לשנתיים.', 'מי שענתה "כן" על אחת השאלות צריכה להציג אישור רופא לפני השיעור הראשון.',
+      'מתחת לגיל 18 נדרש גם אישור של הורה.', 'חשוב לעדכן את יובל על כל שינוי במצב הבריאותי, פציעה או היריון. ההשתתפות בהתאם להצהרת הבריאות שמילאת.']],
+    ['צילום', ['מותר לצלם את עצמך בשיעור. מה שאת מצלמת ומפרסמת באחריותך.', 'יובל מצלמת ומשתפת ברשתות רק מי שאישרה זאת בהרשמה. אפשר לשנות את הבחירה בכל רגע בפרופיל, ופרסום שבו רואים אותך יוסר תוך 14 יום מבקשה.']],
+    ['שינויים', ['התקנון, מערכת השעות והמחירים יכולים להשתנות. על שינוי מהותי נודיע באתר מראש. מחיר של מנוי פעיל לא ישתנה בלי הודעה מראש, ותמיד אפשר לבטל.']],
+  ]],
+  privacy: ['מדיניות פרטיות', [
+    ['מי אחראית על המידע', [`${BIZ.name} (Feminine Movement), עוסק מס׳ ${BIZ.id}. לכל פנייה בנושא פרטיות: ${BIZ.email} או וואטסאפ ${BIZ.phone}.`]],
+    ['איזה מידע נאסף ולמה', ['שם, טלפון, גיל ומייל: לניהול החשבון, ההרשמה לשיעורים ויצירת קשר.',
+      'הצהרת בריאות, התשובות, ההערות שכתבת ואישורים רפואיים: חובה לפי תקנות מכוני כושר, ונועדו לשמור על הבטיחות שלך. זה מידע רגיש, והוא נשמר בהגנה מוגברת.',
+      'תשובות לשאלות ההיכרות (לא חובה): כדי להכיר אותך ולהתאים את השיעורים.', 'הרשמות, ביטולים, מנויים ושיעורים שנוצלו: לניהול המנוי והשיעורים.',
+      'סרטונים שהעלית או שיובל העלתה למסע שלך: כדי שתוכלי לראות את ההתקדמות שלך.', 'מזהה מכשיר להתראות (אם הפעלת): כדי לשלוח לך התראות על השיעורים.']],
+    ['מה לא נאסף', ['פרטי כרטיס אשראי: התשלום נעשה בעמוד המאובטח של חברת הסליקה (UPAY), ופרטי הכרטיס לא מגיעים אלינו.', 'אין באתר פרסומות, ואין מעקב או פרופיילינג לצורכי שיווק.']],
+    ['מי רואה את המידע', ['רק יובל רואה את המידע שלך, כולל הצהרת הבריאות. לקוחות אחרות לא רואות שום פרט עלייך.',
+      'ספקי שירות שמפעילים את האתר, רק לצורך זה: Supabase (אחסון המידע, בשרתים בפרנקפורט שבגרמניה), GitHub (אחסון האתר) ו־UPAY (סליקה).', 'המידע לא נמכר ולא מועבר לאף אחד אחר, אלא אם החוק מחייב זאת.']],
+    ['כמה זמן המידע נשמר', ['כל עוד החשבון פעיל. הצהרת בריאות מתחדשת כל שנתיים.', 'אפשר למחוק את החשבון בכל רגע בעמוד הפרופיל, ואז הפרטים, ההרשמות והסרטונים שלך נמחקים.']],
+    ['אבטחה', ['המידע מועבר בחיבור מוצפן ונשמר בשרת מאובטח. כל לקוחה יכולה לגשת רק למידע שלה.']],
+    ['הזכויות שלך', ['לעיין במידע שנשמר עלייך, לתקן אותו (את רוב הפרטים אפשר לתקן לבד בפרופיל), ולבקש למחוק אותו.', 'לבטל בכל רגע הסכמה לצילום ולהתראות.',
+      'נענה לכל בקשה תוך 30 יום לכל היותר. אם לא נענית, אפשר לפנות לרשות להגנת הפרטיות.']],
+    ['הודעות', ['נשלחות רק הודעות שירות: אישור הרשמה, מקום שהתפנה, תזכורות וביטולים. הודעות שיווקיות יישלחו רק אם אישרת זאת במפורש.']],
+  ]],
+};
+function legalSheet(which) {
+  const draw = (el, w) => {
+    const [title, secs] = LEGAL[w];
+    el.innerHTML = `<div class="row" style="gap:8px">${Object.entries(LEGAL).map(([k, [t]]) => `<button class="btn sm ${k === w ? 'gold' : 'outline'}" data-lg="${k}">${t}</button>`).join('')}</div>
+      <h2>${title}</h2><p class="xs muted">Feminine Movement · עודכן לאחרונה: ${LEGAL_DATE}</p>
+      ${secs.map(([h, ls]) => `<h3 class="gold">${esc(h)}</h3>${ls.map(l => `<p class="small soft">· ${esc(l)}</p>`).join('')}`).join('')}
+      <button class="btn ghost block" data-close>סגירה</button>`;
+    $$('[data-lg]', el).forEach(b => b.addEventListener('click', () => { draw(el, b.dataset.lg); el.scrollTop = 0; }));
+    $$('[data-close]', el).forEach(b => b.addEventListener('click', () => { $('#sheet-root').innerHTML = ''; }));
+  };
+  sheet('', el => draw(el, which || 'terms'));
+}
 
 const FAQ = [
   ['צריך ניסיון קודם?', 'ממש לא. שיעור המתחילות בנוי בדיוק בשבילך, וכל אחת מתקדמת בקצב שלה.'],
@@ -409,6 +461,7 @@ ROUTES.onboarding = () => {
       <button class="btn ${OB.photo === false ? 'gold' : 'outline'} block" data-photo="0" aria-pressed="${OB.photo === false}">אני מעדיפה לא להצטלם</button>
       <p class="xs muted">הבחירה לא משפיעה על ההשתתפות שלך, ואפשר לשנות אותה בכל רגע בפרופיל. אם תבקשי, אוריד פרסום שבו רואים אותך תוך 14 יום.</p>
     </div>
+    <div class="row" style="gap:8px"><button class="btn outline sm" data-legal="terms">לתקנון המלא</button><button class="btn outline sm" data-legal="privacy">למדיניות הפרטיות</button></div>
     <label class="check"><input type="checkbox" id="terms" ${OB.terms ? 'checked' : ''}><span>קראתי ואני מאשרת את התקנון, מדיניות הביטולים ומדיניות הפרטיות</span></label>
     <p id="err" class="danger small" hidden></p>`;
 
@@ -435,6 +488,7 @@ ROUTES.onboarding = () => {
   bind('[data-q]', 'click', e => { OB.ans[e.currentTarget.dataset.q] = e.currentTarget.dataset.v === '1'; again(); });
   bind('#health', 'change', e => { OB.health = e.target.checked; again(); });
   bind('#terms', 'change', e => { OB.terms = e.target.checked; again(); });
+  bind('[data-legal]', 'click', e => legalSheet(e.currentTarget.dataset.legal));
   bind('[data-photo]', 'click', e => { OB.photo = e.currentTarget.dataset.photo === '1'; again(); });
   bind('#next', 'click', e => {
     if (OB.step < STEPS) { OB.step++; ROUTES.onboarding(); window.scrollTo(0, 0); } else busy(e.currentTarget, finishOnboarding);
@@ -461,11 +515,57 @@ async function finishOnboarding() {
   } catch (e) { const el = $('#err'); if (el) { el.hidden = false; el.textContent = errText(e); } }
 }
 
+/* ───────────────────────── phone notifications ───────────────────────── */
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+let swReg = null;
+async function swReady() {
+  if (!('serviceWorker' in navigator)) return null;
+  if (!swReg) swReg = await navigator.serviceWorker.register('sw.js').catch(() => null);
+  return swReg;
+}
+// 'on' | 'off' | 'blocked' | 'install' (iPhone: add to home screen first) | 'unsupported'
+async function pushState() {
+  if (!pushSupported()) return isIOS() && !isStandalone() ? 'install' : 'unsupported';
+  if (Notification.permission === 'denied') return 'blocked';
+  const reg = await swReady(); if (!reg) return 'unsupported';
+  const sub = await reg.pushManager.getSubscription().catch(() => null);
+  return sub && Notification.permission === 'granted' ? 'on' : 'off';
+}
+async function enablePush() {
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('לא אושרו התראות. אפשר לאשר בהגדרות הטלפון');
+  const reg = await swReady();
+  const key = Uint8Array.from(atob(CFG.vapid.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - CFG.vapid.length % 4) % 4)), c => c.charCodeAt(0));
+  const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+  const j = sub.toJSON();
+  await sb.rpc('save_push_sub', { ep: j.endpoint, k: j.keys.p256dh, a: j.keys.auth });
+  if (S.profile && !S.profile.notifications_ok) { await sb.update('profiles', `id=eq.${sb.uid}`, { notifications_ok: true }).catch(() => {}); S.profile.notifications_ok = true; }
+}
+// A card that explains and turns notifications on. Returns '' when already on.
+function pushCard(state, compact) {
+  if (state === 'on' || state === 'unsupported') return '';
+  if (state === 'install') return `<div class="card" style="border-color:var(--gold)"><h3>🔔 כדי לקבל התראות באייפון</h3>
+    <p class="small soft">באייפון התראות עובדות רק מהאתר שנשמר במסך הבית:</p>
+    <p class="small soft">1. לוחצים על כפתור השיתוף <b>⎋</b> בתחתית ספארי<br>2. בוחרים <b>"הוספה למסך הבית"</b><br>3. פותחים את האתר מהאייקון החדש, ומפעילים כאן התראות</p></div>`;
+  if (state === 'blocked') return `<div class="card"><h3>🔔 ההתראות חסומות</h3><p class="small soft">כדי לדעת כשמתפנה לך מקום, צריך לאשר התראות לאתר בהגדרות הטלפון או הדפדפן.</p></div>`;
+  return `<div class="card" style="border-color:var(--gold)"><h3>🔔 התראות לטלפון</h3>
+    ${compact ? '' : '<p class="small soft">כדי שתדעי מיד כשמתפנה לך מקום מרשימת ההמתנה, כשמשתנה שיעור, ותזכורת לפני כל שיעור.</p>'}
+    <button class="btn gold block" data-push>להפעיל התראות</button></div>`;
+}
+function bindPush(after) {
+  bind('[data-push]', 'click', e => busy(e.currentTarget, async () => {
+    try { await enablePush(); toast('ההתראות הופעלו 🔔'); } catch (err) { toast(errText(err), 5000); }
+    after && after();
+  }));
+}
+
 /* ───────────────────────── home ───────────────────────── */
 let msgShift = 0;
 ROUTES.home = async () => {
   loading(); showTabs('home');
-  const [cr, sub, s, b, msg, hOk] = await Promise.all([credits(), mySubscription(), upcoming(), myBookings(), sb.rpc('message_of_day', { shift: msgShift }).catch(() => []), sb.rpc('my_health_ok').catch(() => true)]);
+  const [cr, sub, s, b, msg, hOk, ps] = await Promise.all([credits(), mySubscription(), upcoming(), myBookings(), sb.rpc('message_of_day', { shift: msgShift }).catch(() => []), sb.rpc('my_health_ok').catch(() => true), pushState().catch(() => 'unsupported')]);
   const p = S.profile, h = new Date().getHours();
   const greet = h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : 'ערב טוב';
   const m = (msg && msg[0]) || null;
@@ -481,6 +581,7 @@ ROUTES.home = async () => {
     <div class="stack-s" style="gap:4px"><h1>${greet}, ${esc(firstName(p))} 🖤</h1><p class="muted">מה הגוף שלך רוצה להרגיש השבוע?</p></div>
 
     ${hOk === false ? `<div class="card" style="border-color:var(--gold)"><h3>עוד אישור קטן 🩺</h3><p class="small soft">לפני ההרשמה לשיעורים צריך אישור: אישור רופא, אם סימנת "כן" בהצהרת הבריאות, או אישור הורה, אם את מתחת לגיל 18. שלחי אותו ליובל, ומיד כשתאשר תוכלי להירשם לשיעורים.</p>${whatsappLink('היי יובל, מצרפת אישור רופא 🖤') ? `<a class="btn gold block" target="_blank" rel="noopener" href="${whatsappLink('היי יובל, מצרפת אישור רופא 🖤')}">לשליחה בוואטסאפ</a>` : ''}</div>` : ''}
+    ${pushCard(ps)}
     <div class="card wine">
       <div class="row between"><span class="xs" style="color:#F0D6B0;font-weight:600">${m && m.kind === 'משימה' ? 'המשימה של היום 👠' : 'המשפט של היום 💋'}</span><span class="xs" style="color:#E8C9A0">${dm(new Date())}</span></div>
       <p style="font-size:19px;font-weight:500;color:var(--warm)">${m ? nl(m.body) : 'המשפטים היומיים יופיעו כאן בקרוב 🤍'}</p>
@@ -506,10 +607,11 @@ ROUTES.home = async () => {
     <a class="card" href="#/about" style="text-decoration:none;color:inherit;flex-direction:row;align-items:center;gap:14px">
       <img src="yuval.jpg" alt="" style="width:52px;height:52px;border-radius:26px;border:1px solid var(--gold);object-fit:cover;object-position:50% 20%">
       <span class="grow"><h3>קצת עליי</h3><span class="small muted">מי אני, ולמה הקמתי את המרחב הזה</span></span></a>
-    <a class="btn outline block" target="_blank" rel="noopener" href="${CFG.maps}">איך מגיעים 📍</a>
+    <a class="btn outline block" target="_blank" rel="noopener" href="#/arrive">איך מגיעים 📍</a>
     <p class="xs muted center" style="margin-top:-6px">${esc(CFG.address)}</p>
   </div>`, 'home');
   bind('#more', 'click', () => { msgShift++; ROUTES.home(); });
+  bindPush(() => ROUTES.home());
 };
 
 /* ───────────────────────── schedule ───────────────────────── */
@@ -583,7 +685,7 @@ function waitSheet(x) {
     const o = WAIT.find(w => w.h === h);
     el.innerHTML = `<h2>רשימת המתנה 🔔</h2><p class="soft">השיעור מלא. עד מתי את רוצה לחכות למקום?</p>
       <div class="wait-grid" role="radiogroup">${WAIT.map(w => `<button class="btn ${w.h === h ? 'gold' : 'outline'}" role="radio" aria-checked="${w.h === h}" data-h="${w.h}">${w.label}</button>`).join('')}</div>
-      <div class="card flat"><p class="small" style="color:#F0D6B0"><b>חשוב לדעת:</b> אם מתפנה מקום עד ${o.short}, את נרשמת לשיעור אוטומטית ויורד שיעור מהמנוי. אין התראה בטלפון, אז כדאי להציץ באתר לפני השיעור: בעמוד הבית יופיע שאת רשומה. פחות מ־8 שעות לפני השיעור אי אפשר לבטל, אלא אם יש מישהי אחרת ברשימת ההמתנה.</p></div>
+      <div class="card flat"><p class="small" style="color:#F0D6B0"><b>חשוב לדעת:</b> אם מתפנה מקום עד ${o.short}, את נרשמת לשיעור אוטומטית, יורד שיעור מהמנוי ונשלחת אלייך התראה לטלפון. חשוב שההתראות יהיו מופעלות. פחות מ־8 שעות לפני השיעור אי אפשר לבטל, אלא אם יש מישהי אחרת ברשימת ההמתנה.</p></div>
       <label class="check"><input type="checkbox" id="ack" ${ack ? 'checked' : ''}><span>הבנתי ואני מסכימה</span></label>
       <button class="btn primary block" id="join" ${ack ? '' : 'disabled'}>${ack ? 'להצטרף לרשימת ההמתנה' : 'צריך לאשר כדי להצטרף'}</button>
       <button class="btn ghost block" data-close>ביטול</button>`;
@@ -593,6 +695,8 @@ function waitSheet(x) {
     $('#join', el).addEventListener('click', e => busy(e.currentTarget, async () => { $('#sheet-root').innerHTML = ''; await book(x, h); }));
   };
   sheet('', el => draw(el));
+  pushState().then(st => { const el = $('.sheet'); if (!el || st === 'on' || st === 'unsupported') return;
+    el.insertAdjacentHTML('afterbegin', pushCard(st, true)); bindPush(() => { const c = $('.sheet [data-push]'); if (c) c.closest('.card').remove(); }); }).catch(() => {});
 }
 
 /* ───────────────────────── journey ───────────────────────── */
@@ -663,24 +767,29 @@ ROUTES.profile = async () => {
       <div class="grow"><h3 style="font-size:18px">${esc(p.display_name)}</h3><p class="small muted">${esc(p.phone || (sb.session.user && sb.session.user.email) || '')}</p></div>
       <button class="btn ghost sm" id="edit">עריכה</button></div></div>
     <a class="btn outline block" href="#/plans">המנוי שלי</a>
+    <div id="pushbox"></div>
     <div class="stack-s"><h2>צילום בשיעורים</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
       ${tg('photo_social_ok', 'שיתוף ברשתות של הסטודיו', 'רק באישור שלך לכל פרסום')}</div></div>
     <div class="stack-s"><h2>שאלות נפוצות</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
       ${FAQ.map(([q, a]) => `<details class="faq"><summary>${esc(q)}</summary><p>${linky(a)}</p></details>`).join('')}</div></div>
     <div class="stack-s"><h2>מסמכים וחתימות</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
       <div class="list-row"><span>הצהרת בריאות</span><span class="small gold">${until ? 'בתוקף עד ' + dmy(until) : 'טרם נחתמה'}</span></div>
-      <div class="list-row"><span>תקנון ומדיניות ביטולים</span><button class="btn ghost sm" id="terms">לקריאה</button></div></div></div>
+      <div class="list-row"><span>תקנון ומדיניות ביטולים</span><button class="btn ghost sm" data-legal="terms">לקריאה</button></div>
+      <div class="list-row"><span>מדיניות פרטיות</span><button class="btn ghost sm" data-legal="privacy">לקריאה</button></div></div></div>
     ${wa ? `<a class="btn primary block" target="_blank" rel="noopener" href="${wa}">שאלה? כתבי ליובל בוואטסאפ</a>` : ''}
     <div class="row" style="justify-content:center;gap:20px"><button class="btn ghost" id="out">התנתקות</button><button class="btn ghost" id="del">מחיקת החשבון</button></div>
   </div>`, 'profile');
 
+  pushState().then(st => { const box = $('#pushbox'); if (!box) return;
+    box.innerHTML = st === 'on' ? '<div class="card"><div class="row between"><h3>🔔 התראות לטלפון</h3><span class="gold-l small">מופעלות במכשיר הזה ✓</span></div></div>' : pushCard(st);
+    bindPush(() => ROUTES.profile()); }).catch(() => {});
   bind('[data-field]', 'click', e => {
     const f = e.currentTarget.dataset.field, v = !S.profile[f];
     S.profile[f] = v;
     e.currentTarget.setAttribute('aria-checked', String(v));
     sb.update('profiles', `id=eq.${sb.uid}`, { [f]: v }).then(loadProfile).catch(err => { toast(errText(err)); ROUTES.profile(); });
   });
-  bind('#terms', 'click', () => sheet(`<h2>התקנון</h2>${TERMS.map(([t, ls]) => `<h3>${esc(t)}</h3>${ls.map(l => `<p class="small soft">· ${esc(l)}</p>`).join('')}`).join('')}<button class="btn ghost block" data-close>סגירה</button>`));
+  bind('[data-legal]', 'click', e => legalSheet(e.currentTarget.dataset.legal));
   bind('#edit', 'click', () => sheet(`<h2>עריכת פרטים</h2>
       <label class="field"><span>שם מלא או שם חיבה</span><input type="text" id="n" value="${esc(p.display_name)}"></label>
       <label class="field"><span>טלפון</span><input class="ltr" type="tel" id="ph" value="${esc(p.phone || '')}"></label>
@@ -739,6 +848,25 @@ ROUTES.about = () => {
     <h1>היי, אני יובל 🖤</h1>
     <p style="font-size:17px;color:#E8DCD2">בשיעורים שלי העקבים הם רק ההתחלה. מה שאנחנו באמת מתרגלות זה אהבה עצמית, קבלה, שחרור שליטה והתמסרות: לגוף, למוזיקה ולרגע.</p>
     <p style="font-size:17px;color:#E8DCD2">המרחב שלנו פתוח, חושני ובטוח. אין כאן נכון או לא נכון, אין השוואות, ואין צורך בניסיון. יש רק אותך, כמו שאת.</p>
+    <div class="stack-s"><h2>קצת ממני על הרצפה 👠</h2>
+      <video src="dance1.mp4" poster="dance1.jpg" controls muted playsinline loop preload="none" style="width:100%;border-radius:18px;border:1px solid var(--line, #3a2a2e);background:#000"></video>
+      <video src="dance2.mp4" poster="dance2.jpg" controls muted playsinline loop preload="none" style="width:100%;border-radius:18px;border:1px solid var(--line, #3a2a2e);background:#000"></video></div>
+  </div>`, 'home');
+};
+
+/* ───────────────────────── how to get there ───────────────────────── */
+ROUTES.arrive = () => {
+  render(`<div class="stack">
+    <a class="btn ghost" href="#/home" style="align-self:flex-start">› חזרה</a>
+    <h1>איך מגיעים 📍</h1>
+    <p class="soft">${esc(CFG.address)}</p>
+    <a class="btn gold block" target="_blank" rel="noopener" href="${CFG.maps}">פתיחה במפות</a>
+    <a class="btn outline block" target="_blank" rel="noopener" href="https://waze.com/ul?q=${encodeURIComponent(CFG.address)}&navigate=yes">ניווט בוויז</a>
+    <div class="stack-s"><h2>1. מהרחוב אל הכניסה</h2>
+      <video src="arrive1.mp4" poster="arrive1.jpg" controls playsinline preload="none" style="width:100%;border-radius:18px;background:#000"></video></div>
+    <div class="stack-s"><h2>2. מהכניסה אל הסטודיו</h2>
+      <video src="arrive2.mp4" poster="arrive2.jpg" controls playsinline preload="none" style="width:100%;border-radius:18px;background:#000"></video></div>
+    ${whatsappLink('היי יובל, אני בדרך ולא מוצאת 🙈') ? `<a class="btn outline block" target="_blank" rel="noopener" href="${whatsappLink('היי יובל, אני בדרך ולא מוצאת 🙈')}">לא מוצאת? כתבי ליובל</a>` : ''}
   </div>`, 'home');
 };
 
@@ -863,6 +991,7 @@ async function seedMessages() {
 /* ───────────────────────── start ───────────────────────── */
 (async function start() {
   sb.load();
+  swReady();
   const fromLink = await sb.fromUrl();
   if (fromLink && fromLink.error) { route(); setTimeout(() => toast('הקישור לא תקף יותר. נסי שוב'), 300); return; }
   if (fromLink && fromLink.type === 'recovery') { location.hash = '#/reset'; return; }
