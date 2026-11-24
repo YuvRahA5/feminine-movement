@@ -563,7 +563,6 @@ ROUTES.health = async () => {
 
 /* ───────────────────────── guided tour (inside the real pages) ───────────────────────── */
 const COACH = [
-  ['home', '.card.wine', 'המשפט של היום 💋', 'כל יום מחכה לך כאן משפט או משימה קטנה של אהבה עצמית. רוצה עוד אחד? לוחצים "עוד אחד בשבילי".'],
   ['home', '#credits', 'השיעורים שנשארו לך', 'כאן רואים כמה שיעורים נשארו לך החודש ומתי המנוי מתחדש. הכפתור מוביל לעמוד המנויים.'],
   ['home', '#mine', 'השיעורים שלי', 'כל השיעורים שנרשמת אליהם, ואם את ברשימת המתנה לשיעור כלשהו.'],
   ['home', '#tabs a[href="#/schedule"]', 'הסרגל למטה', 'מכאן עוברים בין החלקים באתר. נתחיל ב"מערכת", השיעורים.'],
@@ -736,11 +735,6 @@ ROUTES.home = async () => {
 
     ${hOk === false ? `<div class="card" style="border-color:var(--gold)"><h3>עוד אישור קטן 🩺</h3><p class="small soft">לפני ההרשמה לשיעורים צריך אישור: אישור רופא, אם סימנת "כן" בהצהרת הבריאות, או אישור הורה, אם את מתחת לגיל 18. שלחי אותו ליובל, ומיד כשתאשר תוכלי להירשם לשיעורים.</p>${whatsappLink('היי יובל, מצרפת אישור רופא 🖤') ? `<a class="btn gold block" target="_blank" rel="noopener" href="${whatsappLink('היי יובל, מצרפת אישור רופא 🖤')}">לשליחה בוואטסאפ</a>` : ''}</div>` : ''}
     ${pushCard(ps)}
-    <div class="card wine">
-      <div class="row between"><span class="xs" style="color:#F0D6B0;font-weight:600">${m && m.kind === 'משימה' ? 'המשימה של היום 👠' : 'המשפט של היום 💋'}</span><span class="xs" style="color:#E8C9A0">${dm(new Date())}</span></div>
-      <p style="font-size:19px;font-weight:500;color:var(--warm)">${m ? nl(m.body) : 'המשפטים היומיים יופיעו כאן בקרוב 🤍'}</p>
-      <div><button class="btn outline sm" id="more" style="border-color:#E8C9A0;color:var(--warm)">עוד אחד בשבילי</button></div>
-    </div>
 
     <div class="card" id="credits">
       <div class="row between">
