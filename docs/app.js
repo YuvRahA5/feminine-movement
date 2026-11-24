@@ -1007,8 +1007,7 @@ ROUTES.about = () => {
     <p style="font-size:17px;color:#E8DCD2">בשיעורים שלי העקבים הם רק ההתחלה. מה שאנחנו באמת מתרגלות זה אהבה עצמית, קבלה, שחרור שליטה והתמסרות: לגוף, למוזיקה ולרגע.</p>
     <p style="font-size:17px;color:#E8DCD2">המרחב שלנו פתוח, חושני ובטוח. אין כאן נכון או לא נכון, אין השוואות, ואין צורך בניסיון. יש רק אותך, כמו שאת.</p>
     <div class="stack-s"><h2>קצת ממני על הרצפה 👠</h2>
-      <video src="dance1.mp4" poster="dance1.jpg" controls muted playsinline loop preload="none" style="width:100%;border-radius:18px;border:1px solid var(--line, #3a2a2e);background:#000"></video>
-      <video src="dance2.mp4" poster="dance2.jpg" controls muted playsinline loop preload="none" style="width:100%;border-radius:18px;border:1px solid var(--line, #3a2a2e);background:#000"></video></div>
+      <video src="dance1.mp4" poster="dance1.jpg" controls muted playsinline loop preload="none" style="width:100%;border-radius:18px;border:1px solid var(--line, #3a2a2e);background:#000"></video></div>
   </div>`, 'home');
 };
 
