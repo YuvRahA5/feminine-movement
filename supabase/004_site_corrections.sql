@@ -84,3 +84,7 @@ alter table public.packages add column if not exists pay_url text;
 update public.packages set price_ils = 240 where id = 5;
 update public.packages set price_ils = 440 where id = 6;
 update public.packages set price_ils = 65  where id = 7;
+
+-- 005: signup extras (age, intro questions, health notes and typed signature)
+alter table public.profiles add column if not exists age int, add column if not exists intro jsonb not null default '{}'::jsonb;
+alter table public.health_declarations add column if not exists notes text, add column if not exists signature text;

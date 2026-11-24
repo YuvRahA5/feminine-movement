@@ -15,6 +15,7 @@ const CFG = {
 /* ───────────────────────── texts ───────────────────────── */
 const HEALTH_Q = [
   ['heart', 'האם רופא אמר לך שאת סובלת ממחלת לב?'],
+  ['bp', 'האם רופא אמר לך שיש לך לחץ דם גבוה?'],
   ['chest_rest', 'האם את חשה כאבים בחזה בזמן מנוחה?'],
   ['chest_daily', 'האם את חשה כאבים בחזה במהלך פעולות שגרה ביום־יום?'],
   ['chest_ex', 'האם את חשה כאבים בחזה בזמן פעילות גופנית?'],
@@ -25,10 +26,17 @@ const HEALTH_Q = [
   ['family_sudden', 'האם אחד מבני משפחתך מדרגה ראשונה נפטר ממוות פתאומי בגיל מוקדם?'],
   ['supervised', 'האם רופא אמר לך ב־5 השנים האחרונות לבצע פעילות גופנית רק תחת השגחה רפואית?'],
   ['chronic', 'האם את סובלת ממחלה קבועה (כרונית) שלא הוזכרה כאן, שעשויה להגביל או למנוע ממך ביצוע פעילות גופנית?'],
+  ['preg_risk', 'אם את בהיריון: האם ההיריון הנוכחי, או היריון קודם, הוגדר "היריון בסיכון"? (לא בהיריון? סמני "לא")'],
+];
+const INTRO = [
+  ['danced', 'רקדת פעם?', ['אף פעם, וזה הזמן', 'קצת, פה ושם', 'כן, הרבה'], false],
+  ['why', 'מה הכי מושך אותך? (אפשר לבחור כמה)', ['להשתחרר', 'להתחבר לגוף', 'להרגיש נשית ויפה', 'זמן לעצמי', 'כושר וחיוניות', 'להכיר נשים חדשות'], true],
+  ['source', 'איך הגעת אליי?', ['אינסטגרם', 'טיקטוק', 'חברה המליצה', 'אחר'], false],
 ];
 const HEALTH_END = 'אני מצהירה שקראתי את השאלות, הבנתי אותן ועניתי עליהן בכנות. ידוע לי שאחרי שנתיים מיום החתימה אצטרך למלא הצהרת בריאות חדשה, ושאעדכן את יובל על כל שינוי במצבי, פציעה או היריון.';
 const healthText = ans => 'הצהרת בריאות לפי תקנות מכוני כושר (רישוי ופיקוח) (הצהרת בריאות ותעודה רפואית), התשע"ו־2015\n\n' +
   HEALTH_Q.map(([k, q], i) => `${i + 1}. ${q} ${ans[k] ? 'כן' : 'לא'}`).join('\n') + '\n\n' + HEALTH_END;
+const healthFull = (ans, notes, sig) => healthText(ans) + (notes ? '\n\nהערות: ' + notes : '') + '\n\nחתימה: ' + sig;
 
 const TERMS = [
   ['מנויים ותשלום', [
@@ -343,32 +351,53 @@ ROUTES.reset = () => {
 };
 
 /* ───────────────────────── onboarding (the gate) ───────────────────────── */
-const OB = { step: 1, name: '', phone: '', ans: {}, health: false, terms: false, photo: null };
+const OB = { step: 1, name: '', phone: '', age: '', intro: {}, ans: {}, notes: '', sig: '', health: false, terms: false, photo: null };
+const STEPS = 4;
 ROUTES.onboarding = () => {
   const p = S.profile;
   if (!OB.name && p) { OB.name = p.display_name || ''; OB.phone = p.phone || ''; }
+  const calc = () => {
+    const first = OB.name.trim().split(/\s+/)[0] || '';
+    const age = parseInt(OB.age, 10), ageOk = age >= 12 && age <= 99;
+    const answered = HEALTH_Q.every(([k]) => typeof OB.ans[k] === 'boolean');
+    const sigOk = OB.sig.trim().length >= 2;
+    const can = [0, !!first && ageOk, true, answered && sigOk && OB.health, OB.terms && OB.photo !== null][OB.step];
+    const hint = OB.step === 1 ? (!first ? 'צריך למלא שם כדי להמשיך' : 'צריך למלא גיל כדי להמשיך')
+      : OB.step === 3 ? (!answered ? 'צריך לענות על כל השאלות' : !sigOk ? 'צריך לחתום בשם המלא' : 'צריך לאשר את ההצהרה')
+      : OB.photo === null ? 'צריך לבחור לגבי צילומים' : 'צריך לאשר את התקנון';
+    return { can, label: can ? (OB.step === STEPS ? 'סיום, יאללה לרקוד 💋' : 'המשך') : hint };
+  };
   const first = OB.name.trim().split(/\s+/)[0] || '';
-  const answered = HEALTH_Q.every(([k]) => typeof OB.ans[k] === 'boolean');
+  const age = parseInt(OB.age, 10), minor = age >= 12 && age < 18;
   const anyYes = HEALTH_Q.some(([k]) => OB.ans[k] === true);
-  const can = OB.step === 1 ? !!first : OB.step === 2 ? answered && OB.health : OB.terms && OB.photo !== null;
-  const hint = OB.step === 1 ? 'צריך למלא שם כדי להמשיך' : OB.step === 2 ? (answered ? 'צריך לאשר את ההצהרה' : 'צריך לענות על כל השאלות')
-    : OB.photo === null ? 'צריך לבחור לגבי צילומים' : 'צריך לאשר את התקנון';
+  const { can, label } = calc();
   let body = '';
   if (OB.step === 1) body = `
     <h1>ברוכה הבאה למקום בו הכל אפשרי 🖤</h1>
     <label class="field"><span>שם מלא או שם חיבה</span><input type="text" id="name" value="${esc(OB.name)}" autocomplete="given-name" placeholder="איך לקרוא לך?"></label>
+    <label class="field"><span>גיל <span class="xs muted">(נדרש להצהרת הבריאות)</span></span><input class="ltr" type="number" inputmode="numeric" min="12" max="99" id="age" value="${esc(OB.age)}" placeholder="בת כמה את?"></label>
+    ${minor ? '<p class="small gold-l">מתחת לגיל 18 צריך גם אישור של הורה. אפשר להמשיך בהרשמה, ויובל תיצור איתך קשר לגבי האישור 🤍</p>' : ''}
     <label class="field"><span>טלפון</span><input class="ltr" type="tel" id="phone" value="${esc(OB.phone)}" autocomplete="tel" placeholder="05X-XXXXXXX"></label>`;
   if (OB.step === 2) body = `
+    <h1>נעים מאוד${first ? ', ' + esc(first) : ''} ✨</h1>
+    <p class="soft">שלוש שאלות קטנות, רק לוחצים. לא חובה.</p>
+    ${INTRO.map(([k, q, opts, multi]) => `<div class="card"><h3>${esc(q)}</h3><div class="chips">${opts.map(o => {
+      const on = multi ? (OB.intro[k] || []).includes(o) : OB.intro[k] === o;
+      return `<button class="chip" aria-pressed="${on}" data-ik="${k}" data-iv="${esc(o)}" data-im="${multi ? 1 : 0}">${esc(o)}</button>`; }).join('')}</div></div>`).join('')}`;
+  if (OB.step === 3) body = `
     <h1>הצהרת בריאות</h1>
-    <p class="soft">${first ? esc(first) + ', ' : ''}כדי לרקוד בביטחון, צריך לענות פעם אחת על השאלות. ההצהרה בתוקף לשנתיים.</p>
+    <p class="soft">${first ? esc(first) + ', ' : ''}כדי לרקוד בביטחון, צריך לענות פעם אחת על השאלות. ההצהרה בתוקף לשנתיים, והמידע נשמר באופן מאובטח: רק יובל רואה אותו.</p>
     <div class="card" style="gap:14px">${HEALTH_Q.map(([k, q], i) => `<div class="stack-s" style="gap:8px">
       <p class="small">${i + 1}. ${esc(q)}</p>
       <div class="row" style="gap:8px">
         <button class="btn sm ${OB.ans[k] === false ? 'gold' : 'outline'}" style="flex:1" data-q="${k}" data-v="0" aria-pressed="${OB.ans[k] === false}">לא</button>
         <button class="btn sm ${OB.ans[k] === true ? 'gold' : 'outline'}" style="flex:1" data-q="${k}" data-v="1" aria-pressed="${OB.ans[k] === true}">כן</button></div></div>`).join('')}</div>
-    ${anyYes ? '<div class="card wine"><p class="small" style="color:var(--warm)">ענית "כן" על אחת השאלות? זה בסדר גמור 🤍 לפי החוק צריך אישור רופא שמותר לך להתאמן. אפשר להמשיך בהרשמה, ולפני השיעור הראשון שלחי ליובל את האישור. מיד כשהוא יגיע, תוכלי להירשם לשיעורים.</p></div>' : ''}
+    ${anyYes ? '<div class="card wine"><p class="small" style="color:var(--warm)">ענית "כן" על אחת השאלות? זה בסדר גמור 🤍 צריך אישור רופא שמותר לך להתאמן. אפשר להמשיך בהרשמה, ולפני השיעור הראשון שלחי ליובל את האישור. מיד כשהוא יגיע, תוכלי להירשם לשיעורים.</p></div>' : ''}
+    <label class="field"><span>כדי שאתאים לך את התנועה: יש כאב, פציעה, ניתוח, היריון או כל דבר אחר שכדאי שאדע? <span class="xs muted">(לא חובה)</span></span>
+      <textarea id="notes" rows="3" style="resize:vertical">${esc(OB.notes)}</textarea></label>
+    <label class="field"><span>חתימה: הקלידי את שמך המלא</span><input type="text" id="sig" value="${esc(OB.sig)}" autocomplete="name"></label>
     <label class="check"><input type="checkbox" id="health" ${OB.health ? 'checked' : ''}><span>${esc(HEALTH_END)}</span></label>`;
-  if (OB.step === 3) body = `
+  if (OB.step === 4) body = `
     <p class="gold" style="font-size:18px">ועוד רגע קטן אחרון…</p>
     <h1>התקנון שלנו</h1>
     <p class="muted">קצר, ברור, ושומר על כולנו.</p>
@@ -384,35 +413,47 @@ ROUTES.onboarding = () => {
     <p id="err" class="danger small" hidden></p>`;
 
   render(`<div class="stack">
-    <div class="row between"><span class="logo" style="font-size:22px">Feminine Movement</span><span class="xs muted">שלב ${OB.step} מתוך 3</span></div>
-    <div class="steps" aria-hidden="true">${[1, 2, 3].map(i => `<span class="${i <= OB.step ? 'on' : ''}"></span>`).join('')}</div>
+    <div class="row between"><span class="logo" style="font-size:22px">Feminine Movement</span><span class="xs muted">שלב ${OB.step} מתוך ${STEPS}</span></div>
+    <div class="steps" aria-hidden="true">${[1, 2, 3, 4].map(i => `<span class="${i <= OB.step ? 'on' : ''}"></span>`).join('')}</div>
     ${body}
-    <button class="btn primary block" id="next" ${can ? '' : 'disabled'}>${can ? (OB.step === 3 ? 'סיום, יאללה לרקוד 💋' : 'המשך') : hint}</button>
+    <button class="btn primary block" id="next" ${can ? '' : 'disabled'}>${label}</button>
     ${OB.step > 1 ? '<button class="btn ghost" id="back">חזרה</button>' : '<button class="btn ghost" id="out">התנתקות</button>'}
   </div>`);
 
   const again = () => { const y = window.scrollY; ROUTES.onboarding(); window.scrollTo(0, y); };
-  bind('#name', 'input', e => { OB.name = e.target.value; const b = $('#next'); const ok = !!OB.name.trim(); b.disabled = !ok; b.textContent = ok ? 'המשך' : 'צריך למלא שם כדי להמשיך'; });
+  const refresh = () => { const c = calc(), btn = $('#next'); btn.disabled = !c.can; btn.textContent = c.label; };
+  bind('#name', 'input', e => { OB.name = e.target.value; refresh(); });
+  bind('#age', 'input', e => { OB.age = e.target.value; refresh(); });
+  bind('#age', 'change', again);
   bind('#phone', 'input', e => { OB.phone = e.target.value; });
+  bind('#notes', 'input', e => { OB.notes = e.target.value; });
+  bind('#sig', 'input', e => { OB.sig = e.target.value; refresh(); });
+  bind('[data-ik]', 'click', e => { const d = e.currentTarget.dataset;
+    if (d.im === '1') { const arr = OB.intro[d.ik] || []; OB.intro[d.ik] = arr.includes(d.iv) ? arr.filter(x => x !== d.iv) : [...arr, d.iv]; }
+    else OB.intro[d.ik] = OB.intro[d.ik] === d.iv ? undefined : d.iv;
+    again(); });
   bind('[data-q]', 'click', e => { OB.ans[e.currentTarget.dataset.q] = e.currentTarget.dataset.v === '1'; again(); });
   bind('#health', 'change', e => { OB.health = e.target.checked; again(); });
   bind('#terms', 'change', e => { OB.terms = e.target.checked; again(); });
   bind('[data-photo]', 'click', e => { OB.photo = e.currentTarget.dataset.photo === '1'; again(); });
-  bind('#next', 'click', e => { if (OB.step < 3) { OB.step++; ROUTES.onboarding(); window.scrollTo(0, 0); } else busy(e.currentTarget, finishOnboarding); });
+  bind('#next', 'click', e => {
+    if (OB.step < STEPS) { OB.step++; ROUTES.onboarding(); window.scrollTo(0, 0); } else busy(e.currentTarget, finishOnboarding);
+  });
   bind('#back', 'click', () => { OB.step--; ROUTES.onboarding(); window.scrollTo(0, 0); });
   bind('#out', 'click', async () => { await sb.signOut(); S.profile = null; route(); });
 };
 
 async function finishOnboarding() {
-  const now = nowIso();
+  const now = nowIso(), age = parseInt(OB.age, 10);
   const row = {
-    display_name: OB.name.trim(), phone: OB.phone.trim() || null, notifications_ok: false,
+    display_name: OB.name.trim(), phone: OB.phone.trim() || null, age, intro: OB.intro, notifications_ok: false,
     photo_social_ok: OB.photo, photo_journey_ok: true, health_signed_at: now, terms_signed_at: now, terms_version: CFG.termsVersion, onboarded_at: now,
   };
+  const answers = { ...OB.ans, minor: age < 18 };
   try {
     if (S.profile) await sb.update('profiles', `id=eq.${sb.uid}`, row);
     else await sb.insert('profiles', { id: sb.uid, ...row });
-    await sb.insert('health_declarations', { user_id: sb.uid, form_text: healthText(OB.ans), answers: OB.ans });
+    await sb.insert('health_declarations', { user_id: sb.uid, form_text: healthFull(OB.ans, OB.notes.trim(), OB.sig.trim()), answers, notes: OB.notes.trim() || null, signature: OB.sig.trim() });
     await loadProfile();
     OB.step = 1;
     location.hash = '#/home'; route();
@@ -439,7 +480,7 @@ ROUTES.home = async () => {
       ${p.is_admin ? '<a class="btn outline sm" href="#/admin">ניהול</a>' : ''}</div>
     <div class="stack-s" style="gap:4px"><h1>${greet}, ${esc(firstName(p))} 🖤</h1><p class="muted">מה הגוף שלך רוצה להרגיש השבוע?</p></div>
 
-    ${hOk === false ? `<div class="card" style="border-color:var(--gold)"><h3>מחכות לאישור הרופא 🩺</h3><p class="small soft">בהצהרת הבריאות סימנת "כן" על אחת השאלות, ולכן לפי החוק צריך אישור רופא שמותר לך להתאמן. שלחי אותו ליובל, ומיד כשתאשר תוכלי להירשם לשיעורים.</p>${whatsappLink('היי יובל, מצרפת אישור רופא 🖤') ? `<a class="btn gold block" target="_blank" rel="noopener" href="${whatsappLink('היי יובל, מצרפת אישור רופא 🖤')}">לשליחה בוואטסאפ</a>` : ''}</div>` : ''}
+    ${hOk === false ? `<div class="card" style="border-color:var(--gold)"><h3>עוד אישור קטן 🩺</h3><p class="small soft">לפני ההרשמה לשיעורים צריך אישור: אישור רופא, אם סימנת "כן" בהצהרת הבריאות, או אישור הורה, אם את מתחת לגיל 18. שלחי אותו ליובל, ומיד כשתאשר תוכלי להירשם לשיעורים.</p>${whatsappLink('היי יובל, מצרפת אישור רופא 🖤') ? `<a class="btn gold block" target="_blank" rel="noopener" href="${whatsappLink('היי יובל, מצרפת אישור רופא 🖤')}">לשליחה בוואטסאפ</a>` : ''}</div>` : ''}
     <div class="card wine">
       <div class="row between"><span class="xs" style="color:#F0D6B0;font-weight:600">${m && m.kind === 'משימה' ? 'המשימה של היום 👠' : 'המשפט של היום 💋'}</span><span class="xs" style="color:#E8C9A0">${dm(new Date())}</span></div>
       <p style="font-size:19px;font-weight:500;color:var(--warm)">${m ? nl(m.body) : 'המשפטים היומיים יופיעו כאן בקרוב 🤍'}</p>
@@ -463,7 +504,7 @@ ROUTES.home = async () => {
     </div>
 
     <a class="card" href="#/about" style="text-decoration:none;color:inherit;flex-direction:row;align-items:center;gap:14px">
-      <span style="width:52px;height:52px;border-radius:26px;border:1px solid var(--gold);background:var(--raised);display:flex;align-items:center;justify-content:center;font-size:22px">🖤</span>
+      <img src="yuval.jpg" alt="" style="width:52px;height:52px;border-radius:26px;border:1px solid var(--gold);object-fit:cover;object-position:50% 20%">
       <span class="grow"><h3>קצת עליי</h3><span class="small muted">מי אני, ולמה הקמתי את המרחב הזה</span></span></a>
     <a class="btn outline block" target="_blank" rel="noopener" href="${CFG.maps}">איך מגיעים 📍</a>
     <p class="xs muted center" style="margin-top:-6px">${esc(CFG.address)}</p>
@@ -694,6 +735,7 @@ ROUTES.plans = async () => {
 ROUTES.about = () => {
   render(`<div class="stack">
     <a class="btn ghost" href="#/home" style="align-self:flex-start">› חזרה</a>
+    <img src="yuval.jpg" alt="יובל" style="width:100%;aspect-ratio:1;object-fit:cover;object-position:50% 25%;border-radius:22px;border:1px solid var(--gold)">
     <h1>היי, אני יובל 🖤</h1>
     <p style="font-size:17px;color:#E8DCD2">בשיעורים שלי העקבים הם רק ההתחלה. מה שאנחנו באמת מתרגלות זה אהבה עצמית, קבלה, שחרור שליטה והתמסרות: לגוף, למוזיקה ולרגע.</p>
     <p style="font-size:17px;color:#E8DCD2">המרחב שלנו פתוח, חושני ובטוח. אין כאן נכון או לא נכון, אין השוואות, ואין צורך בניסיון. יש רק אותך, כמו שאת.</p>
@@ -708,11 +750,11 @@ ROUTES.admin = async () => {
   const sess = await sb.select('class_sessions', `select=*&starts_at=gte.${new Date(Date.now() - 6 * 36e5).toISOString()}&cancelled=eq.false&order=starts_at&limit=12`);
   const [book, clients, packs, subs, packsLeft, decl] = await Promise.all([
     sess.length ? sb.select('bookings', `select=id,session_id,status,joined_at,profiles(display_name)&session_id=in.(${sess.map(x => x.id).join(',')})&status=in.(booked,waitlist)&order=joined_at`) : [],
-    sb.select('profiles', 'select=id,display_name,phone,photo_journey_ok,photo_social_ok&order=display_name'),
+    sb.select('profiles', 'select=id,display_name,phone,age,intro,photo_journey_ok,photo_social_ok&order=display_name'),
     sb.select('packages', 'select=*&active=eq.true&order=sort'),
     sb.select('subscriptions', `select=*,packages(title)&status=eq.active`),
     sb.select('credit_packs', `select=user_id,remaining&expires_at=gt.${nowIso()}`),
-    sb.select('health_declarations', 'select=user_id,needs_doctor,doctor_approved_at,signed_at&order=signed_at'),
+    sb.select('health_declarations', 'select=user_id,needs_doctor,doctor_approved_at,signed_at,notes,answers&order=signed_at'),
   ]);
   const lastDecl = {}; decl.forEach(d => { lastDecl[d.user_id] = d; });
   const waitDoc = clients.filter(x => lastDecl[x.id] && lastDecl[x.id].needs_doctor && !lastDecl[x.id].doctor_approved_at);
@@ -723,7 +765,7 @@ ROUTES.admin = async () => {
 
   render(`<div class="stack">
     <div class="row between"><h1>ניהול 🐆</h1><a class="btn ghost" href="#/home">› חזרה</a></div>
-    ${waitDoc.length ? `<div class="card" style="border-color:var(--gold)"><h3>מחכות לאישור רופא 🩺</h3><p class="xs muted">סימנו "כן" בהצהרת הבריאות. אחרי שקיבלת אישור רופא, לחצי "אישור" והן יוכלו להירשם.</p>
+    ${waitDoc.length ? `<div class="card" style="border-color:var(--gold)"><h3>מחכות לאישור 🩺</h3><p class="xs muted">סימנו "כן" בהצהרת הבריאות (צריך אישור רופא), או שהן מתחת לגיל 18 (צריך אישור הורה). אחרי שקיבלת את האישור, לחצי "אישור" והן יוכלו להירשם.</p>
       ${waitDoc.map(x => `<div class="list-row"><span>${esc(x.display_name)}</span><button class="btn gold sm" data-doc="${x.id}">אישור</button></div>`).join('')}</div>` : ''}
     <button class="btn outline block" id="tue">הוספת שיעורי ראשון ל־8 שבועות</button>
     ${sess.map(s => {
@@ -747,6 +789,14 @@ ROUTES.admin = async () => {
       <div class="chips">${clients.map(x => `<button class="chip" aria-pressed="${x.id === adminClient}" data-client="${x.id}">${esc(x.display_name)}</button>`).join('')}</div>
       ${c ? `<div class="stack-s">
         <p class="small muted">${esc(c.phone || '')} · נשארו ${credLabel(left[c.id] || 0)} · ${subOf[c.id] ? 'מנוי: ' + esc(subOf[c.id].packages.title) + ', מתחדש ' + dmy(new Date(subOf[c.id].period_end)) : 'אין מנוי פעיל'}</p>
+        ${(() => { const d = lastDecl[c.id], i = c.intro || {}, yes = d ? HEALTH_Q.filter(([k]) => d.answers && d.answers[k]).map(([, q]) => q) : [];
+          return `<div class="card flat stack-s" style="gap:6px">
+            ${c.age ? `<p class="small">גיל: ${esc(c.age)}${c.age < 18 ? ' · <span class="gold-l">צריך אישור הורה</span>' : ''}</p>` : ''}
+            ${i.danced ? `<p class="small">רקדה פעם: ${esc(i.danced)}</p>` : ''}
+            ${i.why && i.why.length ? `<p class="small">מה מושך אותה: ${esc(i.why.join(', '))}</p>` : ''}
+            ${i.source ? `<p class="small">הגיעה דרך: ${esc(i.source)}</p>` : ''}
+            ${yes.length ? `<p class="small gold-l">ענתה "כן" על: ${esc(yes.join(' | '))}</p>` : ''}
+            ${d && d.notes ? `<p class="small">כתבה לך: ${esc(d.notes)}</p>` : ''}</div>`; })()}
         <h3>הפעלת מנוי (אחרי הוראת קבע ב־UPAY)</h3>
         ${packs.filter(p => p.kind === 'monthly').map(p => `<button class="btn outline block" data-sub="${p.id}">${esc(p.title)} · ₪${p.price_ils} לחודש</button>`).join('')}
         ${subOf[c.id] ? `<button class="btn ghost block" data-endsub="${subOf[c.id].id}">ביטול המנוי שלה</button>` : ''}

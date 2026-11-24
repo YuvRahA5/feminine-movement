@@ -46,7 +46,7 @@ p { margin: 0; }
 
 label.field { display: flex; flex-direction: column; gap: 6px; }
 label.field span { font-size: 14px; color: var(--muted); }
-input[type=text], input[type=email], input[type=tel], input[type=password], textarea {
+input[type=text], input[type=email], input[type=tel], input[type=password], input[type=number], textarea {
   min-height: 52px; border-radius: 16px; border: 1px solid #4A3036; background: var(--card); padding: 0 16px; font-size: 17px; width: 100%; }
 input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 input.ltr { direction: ltr; text-align: right; }
