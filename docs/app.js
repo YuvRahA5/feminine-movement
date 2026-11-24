@@ -731,31 +731,32 @@ ROUTES.home = async () => {
   render(`<div class="stack">
     <div class="row between"><div class="logo">Feminine Movement<small>BY YUVAL</small></div>
       ${p.is_admin ? '<a class="btn outline sm" href="#/admin">ניהול</a>' : ''}</div>
-    <div class="stack-s" style="gap:4px"><h1>${greet}, ${esc(firstName(p))} 🖤</h1><p class="muted">מה הגוף שלך רוצה להרגיש השבוע?</p></div>
+    <div class="hero"><p class="xs gold" style="letter-spacing:2px">${dayName(new Date())} · ${dm(new Date())}</p>
+      <h1>${greet}, ${esc(firstName(p))} 🖤</h1><p class="soft">מה הגוף שלך רוצה להרגיש השבוע?</p><span class="gold-line"></span></div>
 
     ${hOk === false ? `<div class="card" style="border-color:var(--gold)"><h3>עוד אישור קטן 🩺</h3><p class="small soft">לפני ההרשמה לשיעורים צריך אישור: אישור רופא, אם סימנת "כן" בהצהרת הבריאות, או אישור הורה, אם את מתחת לגיל 18. שלחי אותו ליובל, ומיד כשתאשר תוכלי להירשם לשיעורים.</p>${whatsappLink('היי יובל, מצרפת אישור רופא 🖤') ? `<a class="btn gold block" target="_blank" rel="noopener" href="${whatsappLink('היי יובל, מצרפת אישור רופא 🖤')}">לשליחה בוואטסאפ</a>` : ''}</div>` : ''}
     ${pushCard(ps)}
 
-    <div class="card" id="credits">
+    <div class="card credits" id="credits">
       <div class="row between">
-        <div><p class="small muted">נשארו לך החודש</p><p style="font-size:26px;font-weight:700">${credLabel(cr.total)}</p></div>
+        <div><p class="small" style="color:#F0D6B0">נשארו לך החודש</p><p class="big-num">${cr.total}<span> ${cr.total === 1 ? 'שיעור' : 'שיעורים'}</span></p></div>
         <a class="btn gold" href="#/plans">${sub && sub.status === 'active' ? 'המנוי שלי' : 'למנויים 👠'}</a>
       </div>
-      <p class="xs ${sub ? 'gold-l' : 'muted'}">${subLine}</p>
+      <p class="xs" style="color:#E8C9A0">${subLine}</p>
     </div>
 
     <div class="stack-s" id="mine">
       <div class="row between"><h2>השיעורים שלי</h2><a href="#/schedule" class="btn ghost sm" style="color:var(--gold)">למערכת</a></div>
-      ${mine.length ? mine.map(x => { const d = new Date(x.s.starts_at); return `<div class="card"><div class="row between">
+      ${mine.length ? mine.map(x => { const d = new Date(x.s.starts_at); return `<div class="card accent"><div class="row between">
           <div><h3>${dayName(d)} ${dm(d)} · ${hm(d)}</h3><p class="small muted">${esc(x.s.title)}</p></div>
           <span class="gold" style="font-weight:600">${x.status === 'booked' ? 'רשומה' : 'בהמתנה'}</span></div></div>`; }).join('')
         : `<div class="card" style="align-items:center;text-align:center"><span style="font-size:30px">👠</span><p class="muted">עוד לא נרשמת לשיעור. הרצפה מחכה לך.</p><a class="btn primary" href="#/schedule">לבחור שיעור</a></div>`}
     </div>
 
-    <a class="card" href="#/about" style="text-decoration:none;color:inherit;flex-direction:row;align-items:center;gap:14px">
+    <a class="card about-card" href="#/about" style="text-decoration:none;color:inherit;flex-direction:row;align-items:center;gap:14px">
       <img src="yuval.jpg" alt="" style="width:52px;height:52px;border-radius:26px;border:1px solid var(--gold);object-fit:cover;object-position:50% 20%">
       <span class="grow"><h3>קצת עליי</h3><span class="small muted">מי אני, ולמה הקמתי את המרחב הזה</span></span></a>
-    <a class="btn outline block" target="_blank" rel="noopener" href="#/arrive">איך מגיעים 📍</a>
+    <a class="btn outline block" href="#/arrive">איך מגיעים 📍</a>
     <p class="xs muted center" style="margin-top:-6px">${esc(CFG.address)}</p>
   </div>`, 'home');
   bind('#more', 'click', () => { msgShift++; ROUTES.home(); });
@@ -998,8 +999,12 @@ ROUTES.about = () => {
     <a class="btn ghost" href="#/home" style="align-self:flex-start">› חזרה</a>
     <img src="yuval.jpg" alt="יובל" style="width:100%;aspect-ratio:1;object-fit:cover;object-position:50% 25%;border-radius:22px;border:1px solid var(--gold)">
     <h1>היי, אני יובל 🖤</h1>
-    <p style="font-size:17px;color:#E8DCD2">בשיעורים שלי העקבים הם רק ההתחלה. מה שאנחנו באמת מתרגלות זה אהבה עצמית, קבלה, שחרור שליטה והתמסרות: לגוף, למוזיקה ולרגע.</p>
-    <p style="font-size:17px;color:#E8DCD2">המרחב שלנו פתוח, חושני ובטוח. אין כאן נכון או לא נכון, אין השוואות, ואין צורך בניסיון. יש רק אותך, כמו שאת.</p>
+    <p class="gold small" style="letter-spacing:1px">רוקדת מגיל 6 · היפ־הופ מגיל 12 · עקבים מגיל 18</p>
+    <p style="font-size:17px;color:#E8DCD2;line-height:1.75">אני רוקדת מאז שאני זוכרת את עצמי. בגיל 6 התחלתי, בגיל 12 עברתי להיפ־הופ, ובגיל 18 התגלגלתי לעקבים. מאז אני שם, ולא מתכוונת לצאת.</p>
+    <p style="font-size:17px;color:#E8DCD2;line-height:1.75">על העקבים קרה לי משהו שלא קרה בשום ריקוד אחר. לאט לאט פתחתי את הלב, הסכמתי לעצמי להרגיש בלי שיפוטיות, נתתי לעצמי מקום, ושמתי את עצמי במקום הראשון. והחיים שלי הפכו למלאים, מרגשים, מלאי הזדמנויות. אני יודעת על בשרי כמה הכול משתנה ברגע שאישה מחוברת לעצמה.</p>
+    <p style="font-size:17px;color:#E8DCD2;line-height:1.75">פתחתי את השיעורים כי הרגשתי שכל כך הרבה נשים מחפשות את המקום הזה. לא עוד סתם ספורט, ולא עוד ריקוד של 1, 2, 3, אלא משהו עמוק יותר. משהו שמחבר אותנו לנשיות שלנו, לרוח, לאהבה ולתחושות שלנו. בעולם של אינסטגרם, של הוכחות, של ספידים, עולם גברי כל כך, המקום הזה חסר, והשינוי ממש מתבקש.</p>
+    <p style="font-size:17px;color:#E8DCD2;line-height:1.75">ורציתי שתהיה כאן קהילה. אני מאמינה מאוד באחדות נשים, ובמה שקורה כשאנחנו יחד.</p>
+    <div class="card credits"><p style="font-size:17px;color:var(--warm);line-height:1.75">המרחב שלנו פתוח, חושני ובטוח. אין כאן נכון או לא נכון, אין השוואות, ואין צורך בניסיון. יש רק אותך, כמו שאת. ויש בזה משהו כל כך נשי, כל כך נקבי, כל כך קסום ✨</p></div>
     <div class="stack-s"><h2>קצת ממני על הרצפה 👠</h2>
       <video src="dance1.mp4" poster="dance1.jpg" controls muted playsinline loop preload="none" style="width:100%;border-radius:18px;border:1px solid var(--line, #3a2a2e);background:#000"></video></div>
   </div>`, 'home');
