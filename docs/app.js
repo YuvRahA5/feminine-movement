@@ -73,6 +73,7 @@ const LEGAL = {
     ['ביטול המנוי', ['אפשר לבטל את המנוי בכל עת, בעמוד "המנוי שלי" באתר או בהודעה ליובל.', 'הביטול נכנס לתוקף תוך 3 ימי עסקים, ואין חיובים אחרי מועד הביטול.', 'השיעורים של החודש ששולם נשארים זמינים עד סוף אותו חודש.']],
     ['ביטול עסקה והחזר כספי', ['לפי חוק הגנת הצרכן, אפשר לבטל רכישה תוך 14 יום מיום הרכישה, ובלבד שעוד לא השתתפת בשיעור מהרכישה הזו. ההחזר יינתן בניכוי דמי ביטול של 5% מהמחיר או ₪100, הנמוך מביניהם.',
       'לאזרחים ותיקים (מעל 65), לאנשים עם מוגבלות ולעולים חדשים, החוק מאפשר במקרים מסוימים לבטל עד 4 חודשים מיום הרכישה.',
+      'אחרי שהשתתפת בשיעור מהרכישה, אין החזר כספי על אותה רכישה. במנוי אפשר תמיד לבטל את החיובים של החודשים הבאים, כמו שכתוב למעלה.',
       'בקשת ביטול שולחים בוואטסאפ או במייל, עם שם מלא ותאריך הרכישה. ההחזר יינתן לאותו אמצעי תשלום, תוך 14 יום מקבלת הבקשה.']],
     ['בריאות ואחריות', ['לפני ההשתתפות ממלאים הצהרת בריאות לפי תקנות מכוני כושר. ההצהרה בתוקף לשנתיים.', 'מי שענתה "כן" על אחת השאלות צריכה להציג אישור רופא לפני השיעור הראשון.',
       'מתחת לגיל 18 נדרש גם אישור של הורה.', 'חשוב לעדכן את יובל על כל שינוי במצב הבריאותי, פציעה או היריון. ההשתתפות בהתאם להצהרת הבריאות שמילאת.']],
@@ -98,7 +99,8 @@ const LEGAL = {
 function legalSheet(which) {
   const draw = (el, w) => {
     const [title, secs] = LEGAL[w];
-    el.innerHTML = `<div class="row" style="gap:8px">${Object.entries(LEGAL).map(([k, [t]]) => `<button class="btn sm ${k === w ? 'gold' : 'outline'}" data-lg="${k}">${t}</button>`).join('')}</div>
+    el.innerHTML = `<div class="sheet-x"><span class="small muted">מסמכים</span><button data-close aria-label="סגירה">✕</button></div>
+      <div class="row" style="gap:8px">${Object.entries(LEGAL).map(([k, [t]]) => `<button class="btn sm ${k === w ? 'gold' : 'outline'}" data-lg="${k}">${t}</button>`).join('')}</div>
       <h2>${title}</h2><p class="xs muted">Feminine Movement · עודכן לאחרונה: ${LEGAL_DATE}</p>
       ${secs.map(([h, ls]) => `<h3 class="gold">${esc(h)}</h3>${ls.map(l => `<p class="small soft">· ${esc(l)}</p>`).join('')}`).join('')}
       <button class="btn ghost block" data-close>סגירה</button>`;
@@ -439,16 +441,7 @@ ROUTES.onboarding = () => {
   if (OB.step === 3) body = `
     <h1>הצהרת בריאות</h1>
     <p class="soft">${first ? esc(first) + ', ' : ''}כדי לרקוד בביטחון, צריך לענות פעם אחת על השאלות. ההצהרה בתוקף לשנתיים, והמידע נשמר באופן מאובטח: רק יובל רואה אותו.</p>
-    <div class="card" style="gap:14px">${HEALTH_Q.map(([k, q], i) => `<div class="stack-s" style="gap:8px">
-      <p class="small">${i + 1}. ${esc(q)}</p>
-      <div class="row" style="gap:8px">
-        <button class="btn sm ${OB.ans[k] === false ? 'gold' : 'outline'}" style="flex:1" data-q="${k}" data-v="0" aria-pressed="${OB.ans[k] === false}">לא</button>
-        <button class="btn sm ${OB.ans[k] === true ? 'gold' : 'outline'}" style="flex:1" data-q="${k}" data-v="1" aria-pressed="${OB.ans[k] === true}">כן</button></div></div>`).join('')}</div>
-    ${anyYes ? '<div class="card wine"><p class="small" style="color:var(--warm)">ענית "כן" על אחת השאלות? זה בסדר גמור 🤍 צריך אישור רופא שמותר לך להתאמן. אפשר להמשיך בהרשמה, ולפני השיעור הראשון שלחי ליובל את האישור. מיד כשהוא יגיע, תוכלי להירשם לשיעורים.</p></div>' : ''}
-    <label class="field"><span>כדי שאתאים לך את התנועה: יש כאב, פציעה, ניתוח, היריון או כל דבר אחר שכדאי שאדע? <span class="xs muted">(לא חובה)</span></span>
-      <textarea id="notes" rows="3" style="resize:vertical">${esc(OB.notes)}</textarea></label>
-    <label class="field"><span>חתימה: הקלידי את שמך המלא</span><input type="text" id="sig" value="${esc(OB.sig)}" autocomplete="name"></label>
-    <label class="check"><input type="checkbox" id="health" ${OB.health ? 'checked' : ''}><span>${esc(HEALTH_END)}</span></label>`;
+    ${healthFormHtml(OB, first)}`;
   if (OB.step === 4) body = `
     <p class="gold" style="font-size:18px">ועוד רגע קטן אחרון…</p>
     <h1>התקנון שלנו</h1>
@@ -510,10 +503,101 @@ async function finishOnboarding() {
     await sb.insert('health_declarations', { user_id: sb.uid, form_text: healthFull(OB.ans, OB.notes.trim(), OB.sig.trim()), answers, notes: OB.notes.trim() || null, signature: OB.sig.trim() });
     await loadProfile();
     OB.step = 1;
-    location.hash = '#/home'; route();
+    sessionStorage.setItem('fm_tour_i', '0'); location.hash = '#/tour'; route();
     setTimeout(() => toast(`ברוכה הבאה, ${firstName(S.profile)} 🖤`), 300);
   } catch (e) { const el = $('#err'); if (el) { el.hidden = false; el.textContent = errText(e); } }
 }
+
+/* ───────────────────────── health declaration (shared) ───────────────────────── */
+function healthFormHtml(st, first) {
+  const anyYes = HEALTH_Q.some(([k]) => st.ans[k] === true);
+  return `<div class="card" style="gap:14px">${HEALTH_Q.map(([k, q], i) => `<div class="stack-s" style="gap:8px">
+      <p class="small">${i + 1}. ${esc(q)}</p>
+      <div class="row" style="gap:8px">
+        <button class="btn sm ${st.ans[k] === false ? 'gold' : 'outline'}" style="flex:1" data-q="${k}" data-v="0" aria-pressed="${st.ans[k] === false}">לא</button>
+        <button class="btn sm ${st.ans[k] === true ? 'gold' : 'outline'}" style="flex:1" data-q="${k}" data-v="1" aria-pressed="${st.ans[k] === true}">כן</button></div></div>`).join('')}</div>
+    ${anyYes ? '<div class="card wine"><p class="small" style="color:var(--warm)">ענית "כן" על אחת השאלות? זה בסדר גמור 🤍 צריך אישור רופא שמותר לך להתאמן. לפני השיעור הבא שלחי ליובל את האישור, ומיד כשהוא יגיע תוכלי להירשם לשיעורים.</p></div>' : ''}
+    <label class="field"><span>כדי שאתאים לך את התנועה: יש כאב, פציעה, ניתוח, היריון או כל דבר אחר שכדאי שאדע? <span class="xs muted">(לא חובה)</span></span>
+      <textarea id="notes" rows="3" style="resize:vertical">${esc(st.notes)}</textarea></label>
+    <label class="field"><span>חתימה: הקלידי את שמך המלא</span><input type="text" id="sig" value="${esc(st.sig)}" autocomplete="name"></label>
+    <label class="check"><input type="checkbox" id="health" ${st.health ? 'checked' : ''}><span>${esc(HEALTH_END)}</span></label>`;
+}
+const healthReady = st => HEALTH_Q.every(([k]) => typeof st.ans[k] === 'boolean') && st.sig.trim().length >= 2 && st.health;
+const healthHint = st => !HEALTH_Q.every(([k]) => typeof st.ans[k] === 'boolean') ? 'צריך לענות על כל השאלות' : st.sig.trim().length < 2 ? 'צריך לחתום בשם המלא' : 'צריך לאשר את ההצהרה';
+
+const HF = { ans: {}, notes: '', sig: '', health: false, loaded: false };
+ROUTES.health = async () => {
+  showTabs('profile');
+  if (!HF.loaded) {
+    loading();
+    const last = await sb.select('health_declarations', `select=answers,notes&user_id=eq.${sb.uid}&order=signed_at.desc&limit=1`).catch(() => []);
+    if (last[0]) { HF.ans = Object.fromEntries(HEALTH_Q.map(([k]) => [k, last[0].answers && typeof last[0].answers[k] === 'boolean' ? last[0].answers[k] : undefined]).filter(([, v]) => v !== undefined)); HF.notes = last[0].notes || ''; }
+    HF.loaded = true;
+  }
+  const ok = healthReady(HF);
+  render(`<div class="stack">
+    <a class="btn ghost" href="#/profile" style="align-self:flex-start">› חזרה</a>
+    <h1>עדכון הצהרת בריאות</h1>
+    <p class="soft">משהו השתנה? פציעה, היריון, אבחנה חדשה? עדכני כאן. ההצהרה החדשה מחליפה את הקודמת ובתוקף לשנתיים.</p>
+    ${healthFormHtml(HF)}
+    <p id="err" class="danger small" hidden></p>
+    <button class="btn primary block" id="save" ${ok ? '' : 'disabled'}>${ok ? 'שמירת ההצהרה' : healthHint(HF)}</button>
+  </div>`, 'profile');
+  const again = () => { const y = window.scrollY; ROUTES.health(); window.scrollTo(0, y); };
+  const refresh = () => { const b = $('#save'), c = healthReady(HF); b.disabled = !c; b.textContent = c ? 'שמירת ההצהרה' : healthHint(HF); };
+  bind('[data-q]', 'click', e => { HF.ans[e.currentTarget.dataset.q] = e.currentTarget.dataset.v === '1'; again(); });
+  bind('#notes', 'input', e => { HF.notes = e.target.value; });
+  bind('#sig', 'input', e => { HF.sig = e.target.value; refresh(); });
+  bind('#health', 'change', e => { HF.health = e.target.checked; refresh(); });
+  bind('#save', 'click', e => busy(e.currentTarget, async () => {
+    try {
+      const now = nowIso(), age = S.profile.age;
+      await sb.insert('health_declarations', { user_id: sb.uid, form_text: healthFull(HF.ans, HF.notes.trim(), HF.sig.trim()), answers: { ...HF.ans, minor: !!age && age < 18 }, notes: HF.notes.trim() || null, signature: HF.sig.trim() });
+      await sb.update('profiles', `id=eq.${sb.uid}`, { health_signed_at: now });
+      await loadProfile(); Object.assign(HF, { ans: {}, notes: '', sig: '', health: false, loaded: false });
+      toast('הצהרת הבריאות עודכנה 🤍'); location.hash = '#/profile';
+    } catch (err) { const el = $('#err'); el.hidden = false; el.textContent = errText(err); }
+  }));
+};
+
+/* ───────────────────────── tour ───────────────────────── */
+const TOUR = [
+  ['💋', 'ברוכה הבאה ל־FM', 'סיור קצר באתר, פחות מדקה. אפשר לחזור אליו תמיד מהפרופיל.'],
+  ['🏠', 'עמוד הבית', 'כל יום מחכה לך כאן משפט או משימה קטנה של אהבה עצמית. רואים גם כמה שיעורים נשארו לך החודש, ואת השיעורים שנרשמת אליהם.'],
+  ['📅', 'מערכת השיעורים', 'לוחצים "להירשם" וזהו. שיעור מלא? אפשר להיכנס לרשימת המתנה ולבחור עד מתי לחכות. אם מתפנה מקום, את נרשמת אוטומטית ומקבלת התראה.\\nביטול עד 8 שעות לפני מחזיר את השיעור למנוי.'],
+  ['🐆', 'המסע שלי', 'כמה שיעורים רקדת, אבני דרך, וסרטונים שלך מהשיעורים. אפשר להעלות סרטונים בעצמך, וסרטון שסימנת בלב נכנס להשוואה "לפני ← עכשיו". הסרטונים פרטיים: רק את ויובל רואות.'],
+  ['👤', 'הפרופיל', 'המנוי שלך, עדכון הצהרת הבריאות, שאלות נפוצות, התקנון, וכפתור לוואטסאפ של יובל.'],
+  ['📲', 'שמרי את FM במסך הבית', ''],
+];
+ROUTES.tour = async () => {
+  const i = Math.min(Number(sessionStorage.getItem('fm_tour_i') || 0), TOUR.length - 1);
+  const [em, title, text] = TOUR[i], last = i === TOUR.length - 1;
+  let extra = '';
+  if (last) {
+    const ps = await pushState().catch(() => 'unsupported');
+    const ios = isIOS(), standalone = isStandalone();
+    extra = standalone ? '<p class="soft center">מעולה, את כבר באתר מתוך מסך הבית ✓</p>' : ios
+      ? `<div class="card"><h3>באייפון (ספארי):</h3><p class="small soft">1. לוחצים על כפתור השיתוף <b>⎋</b> (ריבוע עם חץ למעלה) בתחתית המסך<br>2. גוללים ובוחרים <b>"הוספה למסך הבית"</b><br>3. לוחצים <b>"הוסף"</b> למעלה<br>4. נכנסים מעכשיו דרך האייקון FM, ומפעילים התראות</p></div>`
+      : `<div class="card"><h3>באנדרואיד (כרום):</h3><p class="small soft">1. לוחצים על שלוש הנקודות ⋮ למעלה<br>2. בוחרים <b>"הוספה למסך הבית"</b> או <b>"התקנת אפליקציה"</b><br>3. מאשרים, ונכנסים מעכשיו דרך האייקון FM</p></div>`;
+    extra += `<p class="soft">ככה FM נפתח כמו אפליקציה, ותקבלי התראות כשמתפנה לך מקום ולפני כל שיעור.</p>` + pushCard(ps, true);
+  }
+  render(`<div class="stack" style="min-height:80vh;justify-content:center">
+    <div class="tour-emoji">${em}</div>
+    <h1 class="center">${esc(title)}</h1>
+    ${text ? `<p class="soft center" style="font-size:17px">${nl(text)}</p>` : ''}
+    ${extra}
+    <div class="dots">${TOUR.map((_, k) => `<span class="${k === i ? 'on' : ''}"></span>`).join('')}</div>
+    <button class="btn primary block" id="tnext">${last ? 'סיום, יאללה לרקוד 💋' : 'הבא'}</button>
+    <div class="row between">${i > 0 ? '<button class="btn ghost" id="tback">הקודם</button>' : '<span></span>'}${last ? '' : '<button class="btn ghost" id="tskip">דילוג</button>'}</div>
+  </div>`, null);
+  showTabs(null);
+  const go = k => { sessionStorage.setItem('fm_tour_i', String(k)); ROUTES.tour(); window.scrollTo(0, 0); };
+  const done = () => { try { localStorage.setItem('fm_tour_done', '1'); } catch (_) {} sessionStorage.removeItem('fm_tour_i'); location.hash = '#/home'; };
+  bind('#tnext', 'click', () => last ? done() : go(i + 1));
+  bind('#tback', 'click', () => go(i - 1));
+  bind('#tskip', 'click', done);
+  bindPush(() => ROUTES.tour());
+};
 
 /* ───────────────────────── phone notifications ───────────────────────── */
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -768,12 +852,13 @@ ROUTES.profile = async () => {
       <button class="btn ghost sm" id="edit">עריכה</button></div></div>
     <a class="btn outline block" href="#/plans">המנוי שלי</a>
     <div id="pushbox"></div>
+    <button class="btn ghost block" id="tour">סיור באתר והוספה למסך הבית 📲</button>
     <div class="stack-s"><h2>צילום בשיעורים</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
       ${tg('photo_social_ok', 'שיתוף ברשתות של הסטודיו', 'רק באישור שלך לכל פרסום')}</div></div>
     <div class="stack-s"><h2>שאלות נפוצות</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
       ${FAQ.map(([q, a]) => `<details class="faq"><summary>${esc(q)}</summary><p>${linky(a)}</p></details>`).join('')}</div></div>
     <div class="stack-s"><h2>מסמכים וחתימות</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
-      <div class="list-row"><span>הצהרת בריאות</span><span class="small gold">${until ? 'בתוקף עד ' + dmy(until) : 'טרם נחתמה'}</span></div>
+      <div class="list-row"><div class="grow"><span>הצהרת בריאות</span><p class="xs gold">${until ? 'בתוקף עד ' + dmy(until) : 'טרם נחתמה'}</p></div><a class="btn ghost sm" href="#/health">עדכון</a></div>
       <div class="list-row"><span>תקנון ומדיניות ביטולים</span><button class="btn ghost sm" data-legal="terms">לקריאה</button></div>
       <div class="list-row"><span>מדיניות פרטיות</span><button class="btn ghost sm" data-legal="privacy">לקריאה</button></div></div></div>
     ${wa ? `<a class="btn primary block" target="_blank" rel="noopener" href="${wa}">שאלה? כתבי ליובל בוואטסאפ</a>` : ''}
@@ -791,6 +876,7 @@ ROUTES.profile = async () => {
     sb.update('profiles', `id=eq.${sb.uid}`, { [f]: v }).then(loadProfile).catch(err => { toast(errText(err)); ROUTES.profile(); });
   });
   bind('[data-legal]', 'click', e => legalSheet(e.currentTarget.dataset.legal));
+  bind('#tour', 'click', () => { sessionStorage.setItem('fm_tour_i', '0'); location.hash = '#/tour'; });
   bind('#edit', 'click', () => sheet(`<h2>עריכת פרטים</h2>
       <label class="field"><span>שם מלא או שם חיבה</span><input type="text" id="n" value="${esc(p.display_name)}"></label>
       <label class="field"><span>טלפון</span><input class="ltr" type="tel" id="ph" value="${esc(p.phone || '')}"></label>
@@ -879,7 +965,7 @@ ROUTES.admin = async () => {
   const sess = await sb.select('class_sessions', `select=*&starts_at=gte.${new Date(Date.now() - 6 * 36e5).toISOString()}&cancelled=eq.false&order=starts_at&limit=12`);
   const [book, clients, packs, subs, packsLeft, decl] = await Promise.all([
     sess.length ? sb.select('bookings', `select=id,session_id,status,joined_at,profiles(display_name)&session_id=in.(${sess.map(x => x.id).join(',')})&status=in.(booked,waitlist)&order=joined_at`) : [],
-    sb.select('profiles', 'select=id,display_name,phone,age,intro,photo_journey_ok,photo_social_ok&order=display_name'),
+    sb.select('profiles', 'select=id,display_name,phone,age,intro,photo_journey_ok,photo_social_ok,onboarded_at,is_admin&order=onboarded_at.desc.nullslast'),
     sb.select('packages', 'select=*&active=eq.true&order=sort'),
     sb.select('subscriptions', `select=*,packages(title)&status=eq.active`),
     sb.select('credit_packs', `select=user_id,remaining&expires_at=gt.${nowIso()}`),
@@ -914,7 +1000,14 @@ ROUTES.admin = async () => {
     }).join('')}
 
     <div class="card">
-      <h2>לקוחות (${clients.length})</h2>
+      <h2>לקוחות (${clients.filter(x => !x.is_admin).length})</h2>
+      <details><summary class="btn outline sm">כל הנרשמות: רשימה מלאה</summary>
+        ${clients.filter(x => !x.is_admin).map(x => { const wa = x.phone ? `https://wa.me/972${x.phone.replace(/\D/g, '').replace(/^0/, '')}` : '';
+          return `<div class="list-row"><div class="grow"><p>${esc(x.display_name)}${x.age ? ` <span class="xs muted">· ${esc(x.age)}</span>` : ''}</p>
+            <p class="xs muted">${x.onboarded_at ? 'נרשמה ' + dmy(new Date(x.onboarded_at)) : 'לא סיימה הרשמה'} · ${subOf[x.id] ? esc(subOf[x.id].packages.title) : 'בלי מנוי'} · נשארו ${left[x.id] || 0}${waitDoc.some(w => w.id === x.id) ? ' · <span class="gold-l">מחכה לאישור</span>' : ''}</p></div>
+            ${wa ? `<a class="btn ghost sm" target="_blank" rel="noopener" href="${wa}">וואטסאפ</a>` : ''}</div>`; }).join('') || '<p class="small muted">עוד אין נרשמות.</p>'}
+      </details>
+      <p class="xs muted">לחצי על שם כדי להפעיל מנוי, לטעון שיעור או להעלות סרטון:</p>
       <div class="chips">${clients.map(x => `<button class="chip" aria-pressed="${x.id === adminClient}" data-client="${x.id}">${esc(x.display_name)}</button>`).join('')}</div>
       ${c ? `<div class="stack-s">
         <p class="small muted">${esc(c.phone || '')} · נשארו ${credLabel(left[c.id] || 0)} · ${subOf[c.id] ? 'מנוי: ' + esc(subOf[c.id].packages.title) + ', מתחדש ' + dmy(new Date(subOf[c.id].period_end)) : 'אין מנוי פעיל'}</p>

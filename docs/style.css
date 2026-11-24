@@ -117,3 +117,10 @@ details.faq p { padding-bottom: 14px; color: var(--text-s); font-size: 15px; }
 
 .cap { display: flex; align-items: center; justify-content: space-between; background: var(--raised); border-radius: 16px; padding: 6px 6px 6px 14px; }
 .photo-ph { height: 260px; border-radius: 28px; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); }
+
+.sheet-x { position: sticky; top: -22px; margin: -22px -20px 0; padding: 14px 20px 10px; background: var(--card); z-index: 2; display: flex; justify-content: space-between; align-items: center; border-radius: 28px 28px 0 0; }
+.sheet-x button { width: 40px; height: 40px; border-radius: 20px; border: 1px solid var(--gold); background: transparent; color: var(--gold); font-size: 20px; line-height: 1; }
+.tour-emoji { font-size: 54px; text-align: center; }
+.dots { display: flex; gap: 6px; justify-content: center; }
+.dots span { width: 8px; height: 8px; border-radius: 4px; background: #3a2a2e; }
+.dots span.on { background: var(--gold); width: 22px; }
