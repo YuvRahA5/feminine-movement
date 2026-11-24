@@ -7,14 +7,28 @@ const CFG = {
   url: 'https://vlnssgrfwjrpladaltmr.supabase.co',
   key: 'sb_publishable_YKmyBocLlZ7PorbISkHwQQ_LMneQ5tN', // public client key, safe in a web page
   whatsapp: '',                       // Yuval's number in international form, e.g. 9725XXXXXXXX
-  address: '[כתובת הסטודיו]',
-  termsVersion: '2026-11-v2',
+  address: 'מרווה 11, שכונת סיגליות, באר שבע',
+  maps: 'https://maps.app.goo.gl/jwu2ckW7oeCmkMwp6',
+  termsVersion: '2026-11-v3',
 };
 
 /* ───────────────────────── texts ───────────────────────── */
-const HEALTH_TEXT =
-  '[כאן ייכנס הנוסח המלא של הצהרת הבריאות, לפי הטופס שבתקנות מכוני הכושר]\n\n' +
-  'אני מצהירה שאין לי בעיה רפואית שעלולה לסכן אותי בפעילות גופנית, ושאעדכן את יובל על כל שינוי במצבי, פציעה או היריון.';
+const HEALTH_Q = [
+  ['heart', 'האם רופא אמר לך שאת סובלת ממחלת לב?'],
+  ['chest_rest', 'האם את חשה כאבים בחזה בזמן מנוחה?'],
+  ['chest_daily', 'האם את חשה כאבים בחזה במהלך פעולות שגרה ביום־יום?'],
+  ['chest_ex', 'האם את חשה כאבים בחזה בזמן פעילות גופנית?'],
+  ['dizzy', 'האם במהלך השנה האחרונה איבדת שיווי משקל עקב סחרחורת, או איבדת את הכרתך?'],
+  ['asthma_breath', 'האם רופא אבחן שאת סובלת מאסתמה, ובשלושת החודשים האחרונים היא גרמה לך לקוצר נשימה בזמן מנוחה?'],
+  ['asthma_meds', 'האם רופא אבחן שאת סובלת מאסתמה, ובשלושת החודשים האחרונים נזקקת לטיפול תרופתי בגללה?'],
+  ['family_heart', 'האם אחד מבני משפחתך מדרגה ראשונה נפטר ממחלת לב?'],
+  ['family_sudden', 'האם אחד מבני משפחתך מדרגה ראשונה נפטר ממוות פתאומי בגיל מוקדם?'],
+  ['supervised', 'האם רופא אמר לך ב־5 השנים האחרונות לבצע פעילות גופנית רק תחת השגחה רפואית?'],
+  ['chronic', 'האם את סובלת ממחלה קבועה (כרונית) שלא הוזכרה כאן, שעשויה להגביל או למנוע ממך ביצוע פעילות גופנית?'],
+];
+const HEALTH_END = 'אני מצהירה שקראתי את השאלות, הבנתי אותן ועניתי עליהן בכנות. ידוע לי שאחרי שנתיים מיום החתימה אצטרך למלא הצהרת בריאות חדשה, ושאעדכן את יובל על כל שינוי במצבי, פציעה או היריון.';
+const healthText = ans => 'הצהרת בריאות לפי תקנות מכוני כושר (רישוי ופיקוח) (הצהרת בריאות ותעודה רפואית), התשע"ו־2015\n\n' +
+  HEALTH_Q.map(([k, q], i) => `${i + 1}. ${q} ${ans[k] ? 'כן' : 'לא'}`).join('\n') + '\n\n' + HEALTH_END;
 
 const TERMS = [
   ['מנויים ותשלום', [
@@ -26,24 +40,21 @@ const TERMS = [
   ['ביטולים', [
     'ביטול עד 8 שעות לפני השיעור: השיעור חוזר למנוי.',
     'פחות מ־8 שעות לפני: אפשר לבטל רק אם יש מישהי ברשימת ההמתנה שתיכנס במקומך. אחרת השיעור נספר.',
-    'נכנסת לשיעור מרשימת ההמתנה? את רשומה, גם אם לא ראית את ההודעה.',
+    'נכנסת לשיעור מרשימת ההמתנה? את רשומה.',
     'אי־הגעה: השיעור נספר. שיעור שיובל מבטלת חוזר לכל המשתתפות.',
   ]],
-  ['צילום עצמי', ['מותר לצלם את עצמך בשיעור. מה שאת מצלמת ומפרסמת באחריותך, ובלי לצלם בנות אחרות בלי הסכמתן.']],
+  ['צילום עצמי', ['מותר לצלם את עצמך בשיעור. מה שאת מצלמת ומפרסמת באחריותך.']],
   ['בריאות ואחריות', ['ההשתתפות באחריותך ובהתאם להצהרת הבריאות שמילאת.', 'חשוב לעדכן את יובל על כל שינוי במצב הבריאותי, פציעה או היריון.']],
-  ['פרטיות', ['הפרטים, הצהרת הבריאות והסרטונים שלך נשמרים בשרת מאובטח באירופה. רק את ויובל רואות אותם.']],
+  ['פרטיות', ['הפרטים, הצהרת הבריאות והסרטונים שלך נשמרים בשרת מאובטח. רק את ויובל רואות אותם.']],
 ];
 
 const FAQ = [
   ['צריך ניסיון קודם?', 'ממש לא. שיעור המתחילות בנוי בדיוק בשבילך, וכל אחת מתקדמת בקצב שלה.'],
-  ['מאיפה רוכשים עקבים?', '[ההמלצה שלך]. לשיעורים הראשונים מתאימה נעל עקב יציבה עם רצועה סביב הקרסול.'],
-  ['אפשר להגיע עם גרביים או בלי עקבים?', '[המדיניות שלך].'],
-  ['מה ללבוש?', 'בגדים שנוח לך לזוז בהם ושגורמים לך להרגיש טוב עם עצמך. [המלצה שלך].'],
-  ['מה להביא?', 'בקבוק מים, עקבים, [ברכיות] והרבה אהבה לעצמך.'],
-  ['אפשר להשתתף בהיריון?', '[לבדוק מול הביטוח]. בכל מקרה, חשוב לעדכן את יובל לפני השיעור.'],
-  ['מה אם אני מאחרת?', '[מדיניות האיחורים שלך].'],
-  ['מצלמים בשיעור?', 'רק מי שאישרה צילום. אפשר לשנות את ההסכמה בכל רגע בפרופיל.'],
-  ['איך מבטלים שיעור או מנוי?', 'שיעור: במערכת, עד 8 שעות לפני. מנוי: בעמוד "המנוי שלי", בכל עת.'],
+  ['מאיפה רוכשים עקבים?', 'אלה העקבים שאני ממליצה עליהם: https://a.aliexpress.com/_c4N2yaH3\nלהתחלה מומלץ עקב בגובה 7.5 ס"מ.'],
+  ['אפשר להגיע עם גרביים או בלי עקבים?', 'כן, גם וגם. אפשר לרקוד עם גרביים או בלי עקבים.'],
+  ['מה ללבוש?', 'בגדים שנוח לך לזוז בהם ושגורמים לך להרגיש טוב עם עצמך. יכול להיות טייץ קצר או ארוך, טופ, בגד גוף, חזייה וכו׳.'],
+  ['מה להביא?', 'בקבוק מים ואת הלב הפתוח שלך 🤍'],
+  ['איך מבטלים שיעור או מנוי?', 'שיעור: בעמוד "שיעורים", עד 8 שעות לפני. מנוי: בעמוד "המנוי שלי", בכל עת.'],
 ];
 
 const WAIT = [
@@ -60,6 +71,7 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const nl = s => esc(s).replace(/\n/g, '<br>');
+const linky = s => nl(s).replace(/https?:\/\/[^\s<]+/g, u => `<a href="${u}" target="_blank" rel="noopener" style="color:var(--gold)">לחצי כאן לקישור</a>`);
 const pad = n => (n < 10 ? '0' + n : '' + n);
 const dm = d => `${d.getDate()}.${d.getMonth() + 1}`;
 const dmy = d => `${d.getDate()}.${d.getMonth() + 1}.${String(d.getFullYear()).slice(2)}`;
@@ -331,24 +343,31 @@ ROUTES.reset = () => {
 };
 
 /* ───────────────────────── onboarding (the gate) ───────────────────────── */
-const OB = { step: 1, name: '', phone: '', health: false, terms: false, photo: null, preview: '' };
+const OB = { step: 1, name: '', phone: '', ans: {}, health: false, terms: false, photo: null };
 ROUTES.onboarding = () => {
   const p = S.profile;
   if (!OB.name && p) { OB.name = p.display_name || ''; OB.phone = p.phone || ''; }
   const first = OB.name.trim().split(/\s+/)[0] || '';
-  const can = OB.step === 1 ? !!first : OB.step === 2 ? OB.health : OB.step === 3 ? OB.terms && OB.photo !== null : false;
-  const hint = OB.step === 1 ? 'צריך למלא שם כדי להמשיך' : OB.step === 2 ? 'צריך לאשר את הצהרת הבריאות' : OB.photo === null ? 'צריך לבחור לגבי צילומים' : 'צריך לאשר את התקנון';
+  const answered = HEALTH_Q.every(([k]) => typeof OB.ans[k] === 'boolean');
+  const anyYes = HEALTH_Q.some(([k]) => OB.ans[k] === true);
+  const can = OB.step === 1 ? !!first : OB.step === 2 ? answered && OB.health : OB.terms && OB.photo !== null;
+  const hint = OB.step === 1 ? 'צריך למלא שם כדי להמשיך' : OB.step === 2 ? (answered ? 'צריך לאשר את ההצהרה' : 'צריך לענות על כל השאלות')
+    : OB.photo === null ? 'צריך לבחור לגבי צילומים' : 'צריך לאשר את התקנון';
   let body = '';
   if (OB.step === 1) body = `
     <h1>ברוכה הבאה למקום בו הכל אפשרי 🖤</h1>
-    <p class="soft">והחלק הראשון והמרגש: מה תעדיפי, את שמך המלא או שם חיבה? בשם שתכתבי כאן, אני (יובל) אפנה אלייך בתזכורות ובהודעות.</p>
     <label class="field"><span>שם מלא או שם חיבה</span><input type="text" id="name" value="${esc(OB.name)}" autocomplete="given-name" placeholder="איך לקרוא לך?"></label>
     <label class="field"><span>טלפון</span><input class="ltr" type="tel" id="phone" value="${esc(OB.phone)}" autocomplete="tel" placeholder="05X-XXXXXXX"></label>`;
   if (OB.step === 2) body = `
     <h1>הצהרת בריאות</h1>
-    <p class="soft">${first ? esc(first) + ', ' : ''}כדי לרקוד בביטחון, צריך לחתום פעם אחת. ההצהרה בתוקף לשנתיים, ואז נבקש לחדש.</p>
-    <div class="card small soft">${nl(HEALTH_TEXT)}</div>
-    <label class="check"><input type="checkbox" id="health" ${OB.health ? 'checked' : ''}><span>קראתי, הפרטים נכונים, ואני מאשרת את הצהרת הבריאות</span></label>`;
+    <p class="soft">${first ? esc(first) + ', ' : ''}כדי לרקוד בביטחון, צריך לענות פעם אחת על השאלות. ההצהרה בתוקף לשנתיים.</p>
+    <div class="card" style="gap:14px">${HEALTH_Q.map(([k, q], i) => `<div class="stack-s" style="gap:8px">
+      <p class="small">${i + 1}. ${esc(q)}</p>
+      <div class="row" style="gap:8px">
+        <button class="btn sm ${OB.ans[k] === false ? 'gold' : 'outline'}" style="flex:1" data-q="${k}" data-v="0" aria-pressed="${OB.ans[k] === false}">לא</button>
+        <button class="btn sm ${OB.ans[k] === true ? 'gold' : 'outline'}" style="flex:1" data-q="${k}" data-v="1" aria-pressed="${OB.ans[k] === true}">כן</button></div></div>`).join('')}</div>
+    ${anyYes ? '<div class="card wine"><p class="small" style="color:var(--warm)">ענית "כן" על אחת השאלות? זה בסדר גמור 🤍 לפי החוק צריך אישור רופא שמותר לך להתאמן. אפשר להמשיך בהרשמה, ולפני השיעור הראשון שלחי ליובל את האישור. מיד כשהוא יגיע, תוכלי להירשם לשיעורים.</p></div>' : ''}
+    <label class="check"><input type="checkbox" id="health" ${OB.health ? 'checked' : ''}><span>${esc(HEALTH_END)}</span></label>`;
   if (OB.step === 3) body = `
     <p class="gold" style="font-size:18px">ועוד רגע קטן אחרון…</p>
     <h1>התקנון שלנו</h1>
@@ -361,54 +380,39 @@ ROUTES.onboarding = () => {
       <button class="btn ${OB.photo === false ? 'gold' : 'outline'} block" data-photo="0" aria-pressed="${OB.photo === false}">אני מעדיפה לא להצטלם</button>
       <p class="xs muted">הבחירה לא משפיעה על ההשתתפות שלך, ואפשר לשנות אותה בכל רגע בפרופיל. אם תבקשי, אוריד פרסום שבו רואים אותך תוך 14 יום.</p>
     </div>
-    <label class="check"><input type="checkbox" id="terms" ${OB.terms ? 'checked' : ''}><span>קראתי ואני מאשרת את התקנון, מדיניות הביטולים ומדיניות הפרטיות</span></label>`;
-  if (OB.step === 4) body = `
-    <h1>רוצה לשמוע ממני? 💋</h1>
-    <p class="soft">${first ? esc(first) + ', ' : ''}כל יום אשלח לך משפט או משימה קטנה של אהבה עצמית, וגם תזכורת לפני שיעור והודעה כשמתפנה מקום. אפשר לשנות את זה בכל רגע בפרופיל.</p>
-    <p class="small gold" style="font-weight:700">דוגמה קטנה:</p>
-    <div class="card wine"><p style="font-size:17px;color:var(--warm)">${nl(OB.preview || '…')}</p></div>
-    <p id="err" class="danger small" hidden></p>
-    <button class="btn gold block" data-notif="1">כן, אני רוצה התראות</button>
-    <button class="btn outline block" data-notif="0">לא, תודה</button>`;
+    <label class="check"><input type="checkbox" id="terms" ${OB.terms ? 'checked' : ''}><span>קראתי ואני מאשרת את התקנון, מדיניות הביטולים ומדיניות הפרטיות</span></label>
+    <p id="err" class="danger small" hidden></p>`;
 
   render(`<div class="stack">
-    <div class="row between"><span class="logo" style="font-size:22px">Feminine Movement</span><span class="xs muted">שלב ${OB.step} מתוך 4</span></div>
-    <div class="steps" aria-hidden="true">${[1, 2, 3, 4].map(i => `<span class="${i <= OB.step ? 'on' : ''}"></span>`).join('')}</div>
+    <div class="row between"><span class="logo" style="font-size:22px">Feminine Movement</span><span class="xs muted">שלב ${OB.step} מתוך 3</span></div>
+    <div class="steps" aria-hidden="true">${[1, 2, 3].map(i => `<span class="${i <= OB.step ? 'on' : ''}"></span>`).join('')}</div>
     ${body}
-    ${OB.step < 4 ? `<button class="btn primary block" id="next" ${can ? '' : 'disabled'}>${can ? 'המשך' : hint}</button>` : ''}
+    <button class="btn primary block" id="next" ${can ? '' : 'disabled'}>${can ? (OB.step === 3 ? 'סיום, יאללה לרקוד 💋' : 'המשך') : hint}</button>
     ${OB.step > 1 ? '<button class="btn ghost" id="back">חזרה</button>' : '<button class="btn ghost" id="out">התנתקות</button>'}
   </div>`);
 
-  const again = () => ROUTES.onboarding();
+  const again = () => { const y = window.scrollY; ROUTES.onboarding(); window.scrollTo(0, y); };
   bind('#name', 'input', e => { OB.name = e.target.value; const b = $('#next'); const ok = !!OB.name.trim(); b.disabled = !ok; b.textContent = ok ? 'המשך' : 'צריך למלא שם כדי להמשיך'; });
   bind('#phone', 'input', e => { OB.phone = e.target.value; });
+  bind('[data-q]', 'click', e => { OB.ans[e.currentTarget.dataset.q] = e.currentTarget.dataset.v === '1'; again(); });
   bind('#health', 'change', e => { OB.health = e.target.checked; again(); });
   bind('#terms', 'change', e => { OB.terms = e.target.checked; again(); });
   bind('[data-photo]', 'click', e => { OB.photo = e.currentTarget.dataset.photo === '1'; again(); });
-  bind('#next', 'click', () => { OB.step++; again(); });
-  bind('#back', 'click', () => { OB.step--; again(); });
+  bind('#next', 'click', e => { if (OB.step < 3) { OB.step++; ROUTES.onboarding(); window.scrollTo(0, 0); } else busy(e.currentTarget, finishOnboarding); });
+  bind('#back', 'click', () => { OB.step--; ROUTES.onboarding(); window.scrollTo(0, 0); });
   bind('#out', 'click', async () => { await sb.signOut(); S.profile = null; route(); });
-  bind('[data-notif]', 'click', e => busy(e.currentTarget, () => finishOnboarding(e.currentTarget.dataset.notif === '1')));
-
-  if (OB.step === 4 && !OB.preview) {
-    sb.rpc('message_of_day', { shift: 0 }).then(rows => {
-      const body = (rows && rows[0] && rows[0].body) || 'היי {name} 💋\nתזכרי, הגוף שלך הוא לא פרויקט לתיקון, הוא הבית הכי יפה ובטוח שלך. תתייחסי אליו היום כך.\nכאן איתך תמיד, יובל 🤍';
-      OB.preview = body.split('יפה שלי').join(first).split('{name}').join(first);
-      if (OB.step === 4) again();
-    }).catch(() => {});
-  }
 };
 
-async function finishOnboarding(wantsNotif) {
+async function finishOnboarding() {
   const now = nowIso();
   const row = {
-    display_name: OB.name.trim(), phone: OB.phone.trim() || null, notifications_ok: wantsNotif,
-    photo_social_ok: OB.photo, photo_journey_ok: OB.photo, health_signed_at: now, terms_signed_at: now, terms_version: CFG.termsVersion, onboarded_at: now,
+    display_name: OB.name.trim(), phone: OB.phone.trim() || null, notifications_ok: false,
+    photo_social_ok: OB.photo, photo_journey_ok: true, health_signed_at: now, terms_signed_at: now, terms_version: CFG.termsVersion, onboarded_at: now,
   };
   try {
     if (S.profile) await sb.update('profiles', `id=eq.${sb.uid}`, row);
     else await sb.insert('profiles', { id: sb.uid, ...row });
-    await sb.insert('health_declarations', { user_id: sb.uid, form_text: HEALTH_TEXT });
+    await sb.insert('health_declarations', { user_id: sb.uid, form_text: healthText(OB.ans), answers: OB.ans });
     await loadProfile();
     OB.step = 1;
     location.hash = '#/home'; route();
@@ -420,7 +424,7 @@ async function finishOnboarding(wantsNotif) {
 let msgShift = 0;
 ROUTES.home = async () => {
   loading(); showTabs('home');
-  const [cr, sub, s, b, msg] = await Promise.all([credits(), mySubscription(), upcoming(), myBookings(), sb.rpc('message_of_day', { shift: msgShift }).catch(() => [])]);
+  const [cr, sub, s, b, msg, hOk] = await Promise.all([credits(), mySubscription(), upcoming(), myBookings(), sb.rpc('message_of_day', { shift: msgShift }).catch(() => []), sb.rpc('my_health_ok').catch(() => true)]);
   const p = S.profile, h = new Date().getHours();
   const greet = h < 12 ? 'בוקר טוב' : h < 17 ? 'צהריים טובים' : 'ערב טוב';
   const m = (msg && msg[0]) || null;
@@ -435,6 +439,7 @@ ROUTES.home = async () => {
       ${p.is_admin ? '<a class="btn outline sm" href="#/admin">ניהול</a>' : ''}</div>
     <div class="stack-s" style="gap:4px"><h1>${greet}, ${esc(firstName(p))} 🖤</h1><p class="muted">מה הגוף שלך רוצה להרגיש השבוע?</p></div>
 
+    ${hOk === false ? `<div class="card" style="border-color:var(--gold)"><h3>מחכות לאישור הרופא 🩺</h3><p class="small soft">בהצהרת הבריאות סימנת "כן" על אחת השאלות, ולכן לפי החוק צריך אישור רופא שמותר לך להתאמן. שלחי אותו ליובל, ומיד כשתאשר תוכלי להירשם לשיעורים.</p>${whatsappLink('היי יובל, מצרפת אישור רופא 🖤') ? `<a class="btn gold block" target="_blank" rel="noopener" href="${whatsappLink('היי יובל, מצרפת אישור רופא 🖤')}">לשליחה בוואטסאפ</a>` : ''}</div>` : ''}
     <div class="card wine">
       <div class="row between"><span class="xs" style="color:#F0D6B0;font-weight:600">${m && m.kind === 'משימה' ? 'המשימה של היום 👠' : 'המשפט של היום 💋'}</span><span class="xs" style="color:#E8C9A0">${dm(new Date())}</span></div>
       <p style="font-size:19px;font-weight:500;color:var(--warm)">${m ? nl(m.body) : 'המשפטים היומיים יופיעו כאן בקרוב 🤍'}</p>
@@ -460,7 +465,8 @@ ROUTES.home = async () => {
     <a class="card" href="#/about" style="text-decoration:none;color:inherit;flex-direction:row;align-items:center;gap:14px">
       <span style="width:52px;height:52px;border-radius:26px;border:1px solid var(--gold);background:var(--raised);display:flex;align-items:center;justify-content:center;font-size:22px">🖤</span>
       <span class="grow"><h3>קצת עליי</h3><span class="small muted">מי אני, ולמה הקמתי את המרחב הזה</span></span></a>
-    <a class="btn outline block" target="_blank" rel="noopener" href="https://waze.com/ul?q=${encodeURIComponent(CFG.address)}">איך מגיעים · ${esc(CFG.address)}</a>
+    <a class="btn outline block" target="_blank" rel="noopener" href="${CFG.maps}">איך מגיעים 📍</a>
+    <p class="xs muted center" style="margin-top:-6px">${esc(CFG.address)}</p>
   </div>`, 'home');
   bind('#more', 'click', () => { msgShift++; ROUTES.home(); });
 };
@@ -536,7 +542,7 @@ function waitSheet(x) {
     const o = WAIT.find(w => w.h === h);
     el.innerHTML = `<h2>רשימת המתנה 🔔</h2><p class="soft">השיעור מלא. עד מתי את רוצה לחכות למקום?</p>
       <div class="wait-grid" role="radiogroup">${WAIT.map(w => `<button class="btn ${w.h === h ? 'gold' : 'outline'}" role="radio" aria-checked="${w.h === h}" data-h="${w.h}">${w.label}</button>`).join('')}</div>
-      <div class="card flat"><p class="small" style="color:#F0D6B0"><b>חשוב לדעת:</b> אם מתפנה מקום עד ${o.short}, את נרשמת לשיעור אוטומטית, יורד שיעור מהמנוי ונשלחת אלייך הודעה. גם אם לא ראית את ההודעה, את רשומה. פחות מ־8 שעות לפני השיעור אי אפשר לבטל, אלא אם יש מישהי אחרת ברשימת ההמתנה.</p></div>
+      <div class="card flat"><p class="small" style="color:#F0D6B0"><b>חשוב לדעת:</b> אם מתפנה מקום עד ${o.short}, את נרשמת לשיעור אוטומטית ויורד שיעור מהמנוי. אין התראה בטלפון, אז כדאי להציץ באתר לפני השיעור: בעמוד הבית יופיע שאת רשומה. פחות מ־8 שעות לפני השיעור אי אפשר לבטל, אלא אם יש מישהי אחרת ברשימת ההמתנה.</p></div>
       <label class="check"><input type="checkbox" id="ack" ${ack ? 'checked' : ''}><span>הבנתי ואני מסכימה</span></label>
       <button class="btn primary block" id="join" ${ack ? '' : 'disabled'}>${ack ? 'להצטרף לרשימת ההמתנה' : 'צריך לאשר כדי להצטרף'}</button>
       <button class="btn ghost block" data-close>ביטול</button>`;
@@ -572,13 +578,27 @@ ROUTES.journey = async () => {
     <div class="stack-s"><h2>כל הסרטונים מהשיעורים</h2>
       ${vids.length ? `<div class="grid3">${vids.map(v => `<div class="thumb ${v.liked ? 'liked' : ''}" data-open="${v.id}" role="button" tabindex="0" aria-label="צפייה בסרטון מ־${dm(new Date(v.created_at))}">▶<span class="xs muted">${dm(new Date(v.created_at))}</span>
         <button class="heart" data-like="${v.id}" aria-label="${v.liked ? 'הסרת לייק' : 'לייק'}" aria-pressed="${v.liked}">${v.liked ? '❤️' : '🤍'}</button></div>`).join('')}</div>`
-        : '<p class="small muted">אחרי השיעורים יובל תעלה לכאן סרטונים שלך. הם פרטיים: רק את ויובל רואות אותם.</p>'}
+        : '<p class="small muted">עוד אין כאן סרטונים.</p>'}
     </div>
+    <div class="card"><h3>להעלות סרטון שלי 🎥</h3>
+      <p class="small soft">צילמת את עצמך בשיעור? העלי לכאן ותראי את ההתקדמות שלך לאורך הזמן. הסרטונים פרטיים: רק את ויובל רואות אותם. גם יובל יכולה להעלות לכאן סרטונים שלך.</p>
+      <label class="btn primary block">בחירת סרטון<input type="file" accept="video/*" id="myvid" hidden></label>
+      <p class="xs muted">עד 50MB לסרטון (בערך דקה בטלפון).</p></div>
   </div>`, 'journey');
 
   const byId = Object.fromEntries(vids.map(v => [v.id, v]));
   const like = async v => { await sb.update('videos', `id=eq.${v.id}`, { liked: !v.liked, liked_at: v.liked ? null : nowIso() }); ROUTES.journey(); };
   bind('[data-like]', 'click', e => { e.stopPropagation(); like(byId[e.currentTarget.dataset.like]).catch(err => toast(errText(err))); });
+  bind('#myvid', 'change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    if (f.size > 50 * 1024 * 1024) return toast('הסרטון גדול מדי (מעל 50MB). נסי סרטון קצר יותר', 5000);
+    const label = e.target.closest('label'); label.innerHTML = '<span class="spinner"></span> מעלה…';
+    const ext = (f.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
+    const path = `${sb.uid}/${Date.now()}.${ext}`;
+    sb.upload(path, f).then(() => sb.insert('videos', { user_id: sb.uid, storage_path: path }))
+      .then(() => { toast('הסרטון עלה 🖤'); ROUTES.journey(); })
+      .catch(err => { toast('ההעלאה נכשלה: ' + errText(err), 5000); ROUTES.journey(); });
+  });
   bind('[data-open]', 'click', e => {
     const v = byId[e.currentTarget.dataset.open];
     sheet(`${v.url ? `<video src="${esc(v.url)}" controls playsinline autoplay></video>` : '<p class="muted">הסרטון לא זמין</p>'}
@@ -602,12 +622,10 @@ ROUTES.profile = async () => {
       <div class="grow"><h3 style="font-size:18px">${esc(p.display_name)}</h3><p class="small muted">${esc(p.phone || (sb.session.user && sb.session.user.email) || '')}</p></div>
       <button class="btn ghost sm" id="edit">עריכה</button></div></div>
     <a class="btn outline block" href="#/plans">המנוי שלי</a>
-    <div class="card" style="padding-top:4px;padding-bottom:4px">${tg('notifications_ok', 'התראות', 'המשפט היומי, תזכורות לשיעור, מקום שהתפנה')}</div>
     <div class="stack-s"><h2>צילום בשיעורים</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
-      ${tg('photo_journey_ok', 'צילום למסע שלי', 'סרטונים פרטיים, רק לך וליובל')}
       ${tg('photo_social_ok', 'שיתוף ברשתות של הסטודיו', 'רק באישור שלך לכל פרסום')}</div></div>
     <div class="stack-s"><h2>שאלות נפוצות</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
-      ${FAQ.map(([q, a]) => `<details class="faq"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></div>
+      ${FAQ.map(([q, a]) => `<details class="faq"><summary>${esc(q)}</summary><p>${linky(a)}</p></details>`).join('')}</div></div>
     <div class="stack-s"><h2>מסמכים וחתימות</h2><div class="card" style="padding-top:4px;padding-bottom:4px">
       <div class="list-row"><span>הצהרת בריאות</span><span class="small gold">${until ? 'בתוקף עד ' + dmy(until) : 'טרם נחתמה'}</span></div>
       <div class="list-row"><span>תקנון ומדיניות ביטולים</span><button class="btn ghost sm" id="terms">לקריאה</button></div></div></div>
@@ -644,7 +662,8 @@ ROUTES.plans = async () => {
   loading(); showTabs('home');
   const [packs, sub, cr] = await Promise.all([sb.select('packages', 'select=*&active=eq.true&order=sort'), mySubscription(), credits()]);
   const active = sub && sub.status === 'active';
-  const ask = p => whatsappLink(`היי יובל, אני רוצה להצטרף ל${p.title} (₪${p.price_ils}${p.kind === 'monthly' ? ' לחודש' : ''}) 👠`);
+  const single = (packs.find(x => x.kind === 'single') || { price_ils: 65 }).price_ils;
+  const ask = p => p.pay_url || whatsappLink(`היי יובל, אני רוצה להצטרף ל${p.title} (₪${p.price_ils}${p.kind === 'monthly' ? ' לחודש' : ''}) 👠`);
   render(`<div class="stack">
     <a class="btn ghost" href="#/home" style="align-self:flex-start">› חזרה</a>
     <h1>${active ? 'המנוי שלי' : 'מנויים'}</h1>
@@ -658,10 +677,10 @@ ROUTES.plans = async () => {
     ${packs.map(p => `<div class="card"><div class="row between">
       <div class="grow"><h3 style="font-size:18px">${esc(p.title)}</h3>
         <p class="small muted">${p.kind === 'monthly' ? `${p.classes} שיעורים בחודש · ₪${Math.round(p.price_ils / p.classes)} לשיעור` : 'בתוקף ל־30 יום'}</p>
-        ${p.kind === 'monthly' && p.classes * 80 > p.price_ils ? `<p class="xs gold-l" style="font-weight:600">חיסכון של ₪${p.classes * 80 - p.price_ils} בחודש</p>` : ''}</div>
+        ${p.kind === 'monthly' && p.classes * single > p.price_ils ? `<p class="xs gold-l" style="font-weight:600">${Math.round(100 - 100 * p.price_ils / (p.classes * single))}% הנחה לעומת שיעור בודד</p>` : ''}</div>
       <div class="center"><p style="font-size:22px;font-weight:700">₪${p.price_ils}</p><p class="xs muted">${p.kind === 'monthly' ? 'לחודש' : 'חד־פעמי'}</p></div></div>
       ${ask(p) ? `<a class="btn gold block" target="_blank" rel="noopener" href="${ask(p)}">${active && sub.package_id === p.id ? 'המנוי הנוכחי שלך' : p.kind === 'monthly' ? (active ? 'מעבר למנוי הזה' : 'להצטרפות') : 'לרכישה'}</a>`
-        : '<p class="xs muted">ההצטרפות דרך יובל.</p>'}
+        : '<p class="xs muted">קישור התשלום יעלה כאן בקרוב.</p>'}
     </div>`).join('')}
     <p class="xs muted">המנוי מתחדש אוטומטית בכל חודש בהוראת קבע. שיעורים שלא נוצלו פגים בסוף החודש. אפשר לבטל בכל עת, והביטול נכנס לתוקף תוך 3 ימי עסקים, לפי חוק הגנת הצרכן.</p>
   </div>`, 'home');
@@ -675,13 +694,9 @@ ROUTES.plans = async () => {
 ROUTES.about = () => {
   render(`<div class="stack">
     <a class="btn ghost" href="#/home" style="align-self:flex-start">› חזרה</a>
-    <div class="photo-ph">[תמונה שלך בעקבים]</div>
     <h1>היי, אני יובל 🖤</h1>
-    <p style="font-size:17px;color:#E8DCD2">[כמה מילים על הדרך שלך: מתי התחלת לרקוד, ואיך התאהבת בעקבים]</p>
     <p style="font-size:17px;color:#E8DCD2">בשיעורים שלי העקבים הם רק ההתחלה. מה שאנחנו באמת מתרגלות זה אהבה עצמית, קבלה, שחרור שליטה והתמסרות: לגוף, למוזיקה ולרגע.</p>
     <p style="font-size:17px;color:#E8DCD2">המרחב שלנו פתוח, חושני ובטוח. אין כאן נכון או לא נכון, אין השוואות, ואין צורך בניסיון. יש רק אותך, כמו שאת.</p>
-    <div class="card dashed"><p class="xs gold" style="font-weight:700">בקרוב</p><h3 style="font-size:19px">תרגול מהבית וקורס דיגיטלי</h3>
-      <p class="small muted">בשבועות בלי שיעורים יחכו לך כאן סרטוני תרגול, וקורס דיגיטלי שאפשר לרקוד איתו מכל מקום.</p></div>
   </div>`, 'home');
 };
 
@@ -691,13 +706,16 @@ ROUTES.admin = async () => {
   loading(); showTabs(null);
   await seedMessages();
   const sess = await sb.select('class_sessions', `select=*&starts_at=gte.${new Date(Date.now() - 6 * 36e5).toISOString()}&cancelled=eq.false&order=starts_at&limit=12`);
-  const [book, clients, packs, subs, packsLeft] = await Promise.all([
+  const [book, clients, packs, subs, packsLeft, decl] = await Promise.all([
     sess.length ? sb.select('bookings', `select=id,session_id,status,joined_at,profiles(display_name)&session_id=in.(${sess.map(x => x.id).join(',')})&status=in.(booked,waitlist)&order=joined_at`) : [],
     sb.select('profiles', 'select=id,display_name,phone,photo_journey_ok,photo_social_ok&order=display_name'),
     sb.select('packages', 'select=*&active=eq.true&order=sort'),
     sb.select('subscriptions', `select=*,packages(title)&status=eq.active`),
     sb.select('credit_packs', `select=user_id,remaining&expires_at=gt.${nowIso()}`),
+    sb.select('health_declarations', 'select=user_id,needs_doctor,doctor_approved_at,signed_at&order=signed_at'),
   ]);
+  const lastDecl = {}; decl.forEach(d => { lastDecl[d.user_id] = d; });
+  const waitDoc = clients.filter(x => lastDecl[x.id] && lastDecl[x.id].needs_doctor && !lastDecl[x.id].doctor_approved_at);
   const roster = {}; book.forEach(b => (roster[b.session_id] = roster[b.session_id] || []).push(b));
   const subOf = Object.fromEntries(subs.map(s => [s.user_id, s]));
   const left = {}; packsLeft.forEach(p => { left[p.user_id] = (left[p.user_id] || 0) + p.remaining; });
@@ -705,7 +723,9 @@ ROUTES.admin = async () => {
 
   render(`<div class="stack">
     <div class="row between"><h1>ניהול 🐆</h1><a class="btn ghost" href="#/home">› חזרה</a></div>
-    <button class="btn outline block" id="tue">הוספת שיעורי שלישי ל־8 שבועות</button>
+    ${waitDoc.length ? `<div class="card" style="border-color:var(--gold)"><h3>מחכות לאישור רופא 🩺</h3><p class="xs muted">סימנו "כן" בהצהרת הבריאות. אחרי שקיבלת אישור רופא, לחצי "אישור" והן יוכלו להירשם.</p>
+      ${waitDoc.map(x => `<div class="list-row"><span>${esc(x.display_name)}</span><button class="btn gold sm" data-doc="${x.id}">אישור</button></div>`).join('')}</div>` : ''}
+    <button class="btn outline block" id="tue">הוספת שיעורי ראשון ל־8 שבועות</button>
     ${sess.map(s => {
       const r = roster[s.id] || [], bk = r.filter(x => x.status === 'booked'), wt = r.filter(x => x.status === 'waitlist'), d = new Date(s.starts_at);
       return `<div class="card">
@@ -733,8 +753,7 @@ ROUTES.admin = async () => {
         <h3>שיעור בודד (אחרי תשלום)</h3>
         ${packs.filter(p => p.kind === 'single').map(p => `<button class="btn outline block" data-single="${p.id}">${esc(p.title)} · ₪${p.price_ils}</button>`).join('')}
         <h3>סרטון למסע</h3>
-        ${c.photo_journey_ok ? `<label class="btn primary block">בחירת סרטון<input type="file" accept="video/*" id="vid" hidden></label>`
-          : '<p class="small muted">היא עוד לא אישרה צילום למסע (בפרופיל שלה).</p>'}
+        <label class="btn primary block">בחירת סרטון<input type="file" accept="video/*" id="vid" hidden></label>
         <p class="xs muted">צילום לרשתות: ${c.photo_social_ok ? 'מאשרת ✓' : 'לא מאשרת'}</p>
       </div>` : '<p class="small muted">בחרי לקוחה כדי להפעיל מנוי, לטעון שיעור בודד או להעלות סרטון.</p>'}
     </div>
@@ -744,6 +763,7 @@ ROUTES.admin = async () => {
   bind('[data-client]', 'click', e => { adminClient = e.currentTarget.dataset.client; again(); });
   bind('[data-cap]', 'click', e => busy(e.currentTarget, async () => { await sb.rpc('admin_set_capacity', { s: e.currentTarget.dataset.cap, cap: Number(e.currentTarget.dataset.v) }); again(); }));
   bind('[data-cancel]', 'click', e => { const id = e.currentTarget.dataset.cancel; confirmSheet('לבטל את השיעור?', 'כל הרשומות יקבלו את השיעור בחזרה.', 'כן, לבטל', async () => { await sb.rpc('admin_cancel_session', { s: id }); again(); }, true); });
+  bind('[data-doc]', 'click', e => busy(e.currentTarget, async () => { await sb.rpc('admin_approve_doctor', { u: e.currentTarget.dataset.doc }); toast('אושר ✓ היא יכולה להירשם לשיעורים'); again(); }));
   bind('#tue', 'click', e => busy(e.currentTarget, async () => { const n = await addTuesdays(sess); toast(n ? `נוספו ${n} שיעורים` : 'כל השיעורים כבר קיימים'); again(); }));
   bind('[data-sub]', 'click', e => { const p = packs.find(x => x.id === Number(e.currentTarget.dataset.sub));
     confirmSheet('להפעיל מנוי?', `${p.title} ל${c.display_name}. השיעורים של החודש ייטענו עכשיו, והמנוי יתחדש אוטומטית כל חודש.`, 'הפעלה', async () => {
@@ -767,10 +787,10 @@ ROUTES.admin = async () => {
 
 async function addTuesdays(existing) {
   const have = new Set(existing.map(s => new Date(s.starts_at).getTime()));
-  const rows = [], d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + ((2 - d.getDay() + 7) % 7));
+  const rows = [], d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + ((0 - d.getDay() + 7) % 7));
   for (let w = 0; w < 8; w++) {
     const day = new Date(d); day.setDate(d.getDate() + 7 * w);
-    for (const [h, m, eh, em, level] of [[19, 15, 20, 30, 'מתחילות'], [20, 45, 22, 0, 'בינוני']]) {
+    for (const [h, m, eh, em, level] of [[19, 0, 20, 15, 'מתחילות'], [20, 30, 21, 45, 'בינוני']]) {
       const a = new Date(day); a.setHours(h, m, 0, 0); const b = new Date(day); b.setHours(eh, em, 0, 0);
       if (a > new Date() && !have.has(a.getTime())) rows.push({ title: `עקבים · ${level}`, level, starts_at: a.toISOString(), ends_at: b.toISOString(), capacity: 12 });
     }
